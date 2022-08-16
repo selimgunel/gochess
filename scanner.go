@@ -32,8 +32,8 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// An artificial input source.
-	//f, err := os.Open("pgn/famous_games.pgn")
-	f, err := os.Open("data/counter-vs-zahak.pgn")
+	f, err := os.Open("pgn/famous_games.pgn")
+	//f, err := os.Open("data/counter-vs-zahak.pgn")
 	if err != nil {
 		panic(err)
 	}
@@ -49,11 +49,21 @@ func main() {
 	f.Seek(0, 0)
 	games := extractGames(splitPoint, f)
 
-	for _, v := range games {
-		log.Debug().Msgf("%+v", v)
-	}
+	fmt.Println(games[0])
 
 	f.Close()
+}
+
+//
+func (g Game) String() string {
+	var sb strings.Builder
+	for _, v := range g.Tags {
+		fmt.Fprintf(&sb, "%10s", v[0])
+		sb.WriteString(" => ")
+		fmt.Fprintf(&sb, "%s", v[1])
+		sb.WriteRune('\n')
+	}
+	return sb.String()
 }
 
 func scanPGNBuf(f *os.File) (cutPoints []int) {
@@ -88,7 +98,7 @@ func extractGames(splitPoints []int, f *os.File) []Game {
 	//var lineNumber = 1
 
 	for j, ln := range splitPoints {
-		log.Debug().Msgf("ln %d", ln)
+		//log.Debug().Msgf("ln %d", ln)
 		var g Game
 		if j == len(splitPoints)-1 {
 			break
@@ -100,10 +110,10 @@ func extractGames(splitPoints []int, f *os.File) []Game {
 			//log.Debug().Msgf("%+v", scanner.Text())
 			line := scanner.Text()
 			if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-				before, after, ok := strings.Cut(line, " ")
+				before, after, ok := strings.Cut(line, " \"")
 				if ok {
 					s := make([]string, 0)
-					s = append(s, before, after)
+					s = append(s, before[1:], after[:len(after)-2])
 					g.Tags = append(g.Tags, s)
 				}
 
@@ -119,18 +129,6 @@ func extractGames(splitPoints []int, f *os.File) []Game {
 		log.Fatal().Msgf("%+v", err)
 	}
 	return stacks
-}
-
-//
-func (g *Game) String() string {
-	var sb strings.Builder
-	for _, v := range g.Tags {
-		for _, ident := range v {
-			sb.WriteString(ident)
-		}
-		sb.WriteRune('\n')
-	}
-	return sb.String()
 }
 
 // IsEmpty: check if stack is empty
