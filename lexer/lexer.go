@@ -20,13 +20,15 @@ const LEFT_CURLY_BRACKET string = "{"
 const RIGHT_CURLY_BRACKET string = "}"
 const LEFT_ROUND_BRACKET string = "("
 const RIGHT_ROUND_BRACKET string = ")"
+const DOT string = "."
 
 const EQUAL_SIGN string = "="
 const NEWLINE string = "\n"
 
 const (
 	LEXER_ERROR_UNEXPECTED_EOF        string = "Unexpected end of file"
-	LEXER_ERROR_MISSING_RIGHT_BRACKET string = "Missing a closing section bracket"
+	LEXER_ERROR_MISSING_RIGHT_BRACKET string = "Missing a closing section"
+	LEXER_ERROR_MOVE_NUMBER_EXPECTED  string = "A digit expected"
 )
 
 const (
@@ -40,6 +42,9 @@ const (
 	TOKEN_NEWLINE
 	TOKEN_COMMENT
 
+	//Move tokens e4 cx5!
+	TOKEN_WHITE
+	TOKEN_BLACK
 	//Move related tokens. 1.c4 or 8...d5
 	TOKEN_TURN_NUMBER
 	TOKEN_DOT
@@ -70,13 +75,16 @@ type Lexer struct {
 l lexer function starts everything off. It determines if we are
 beginning with a key/value assignment or a section.
 */
-func LexBegin(lexer *Lexer) LexFn {
-	lexer.SkipWhitespace()
+func LexBegin(l *Lexer) LexFn {
+	l.SkipWhitespace()
 
-	if strings.HasPrefix(lexer.InputToEnd(), LEFT_CURLY_BRACKET) {
+	if strings.HasPrefix(l.InputToEnd(), LEFT_CURLY_BRACKET) {
 		return LexLeftCurlyBracket
+	} else if strings.ContainsAny(l.InputToEnd(), "123456789") {
+		return LexReadMove
+	} else {
+		return l.Errorf("lexer: ", LEXER_ERROR_MOVE_NUMBER_EXPECTED)
 	}
-	return LexReadMove
 
 }
 
@@ -84,9 +92,9 @@ func LexBegin(lexer *Lexer) LexFn {
 l lexer function emits a TOKEN_COMMENT then returns
 the lexer for value.
 */
-func LexLeftCurlyBracket(lexer *Lexer) LexFn {
-	lexer.Pos += len(LEFT_CURLY_BRACKET)
-	lexer.Emit(TOKEN_LEFT_CURLY_BRACKET)
+func LexLeftCurlyBracket(l *Lexer) LexFn {
+	l.Pos += len(LEFT_CURLY_BRACKET)
+	l.Emit(TOKEN_LEFT_CURLY_BRACKET)
 	return LexComment
 }
 
@@ -94,18 +102,18 @@ func LexLeftCurlyBracket(lexer *Lexer) LexFn {
 l lexer function emits a TOKEN_COMMENT then returns
 the lexer for value.
 */
-func LexComment(lexer *Lexer) LexFn {
+func LexComment(l *Lexer) LexFn {
 	for {
-		if lexer.IsEOF() {
-			return lexer.Errorf(LEXER_ERROR_MISSING_RIGHT_BRACKET)
+		if l.IsEOF() {
+			return l.Errorf(LEXER_ERROR_MISSING_RIGHT_BRACKET)
 		}
 
-		if strings.HasPrefix(lexer.InputToEnd(), RIGHT_CURLY_BRACKET) {
-			lexer.Emit(TOKEN_COMMENT)
+		if strings.HasPrefix(l.InputToEnd(), RIGHT_CURLY_BRACKET) {
+			l.Emit(TOKEN_COMMENT)
 			return LexRightCurlyBracket
 		}
 
-		lexer.Inc()
+		l.Inc()
 	}
 }
 
@@ -113,9 +121,9 @@ func LexComment(lexer *Lexer) LexFn {
 l lexer function emits a TOKEN_COMMENT then returns
 the lexer for value.
 */
-func LexRightCurlyBracket(lexer *Lexer) LexFn {
-	lexer.Pos += len(RIGHT_CURLY_BRACKET)
-	lexer.Emit(TOKEN_RIGHT_CURLY_BRACKET)
+func LexRightCurlyBracket(l *Lexer) LexFn {
+	l.Pos += len(RIGHT_CURLY_BRACKET)
+	l.Emit(TOKEN_RIGHT_CURLY_BRACKET)
 	return LexReadMove
 }
 
@@ -129,10 +137,65 @@ func LexReadMove(l *Lexer) LexFn {
 
 		if unicode.IsDigit(l.Peek()) {
 			l.Emit(TOKEN_TURN_NUMBER)
-			return
+			return LexReadTurnNumber
 		}
 
 		l.Inc()
+	}
+}
+
+/*
+l lexer function emits a Turn Number then returns
+the lexer for value.
+*/
+func LexReadTurnNumber(l *Lexer) LexFn {
+	l.SkipWhitespace()
+	if strings.HasPrefix(l.InputToEnd(), DOT) {
+		l.Emit(TOKEN_TURN_NUMBER)
+		l.Inc()
+		return LexReadWhiteMove
+	} else {
+
+		return l.Errorf(LEXER_ERROR_MISSING_RIGHT_BRACKET)
+	}
+
+}
+
+/*
+l lexer function reads white move value.
+*/
+func LexReadWhiteMove(l *Lexer) LexFn {
+
+	for {
+
+		if strings.HasPrefix(l.InputToEnd(), " ") {
+			l.Ignore()
+
+		} else if strings.HasPrefix(l.InputToEnd(), "{") {
+			return LexComment
+		} else if strings.ContainsAny(l.InputToEnd(), "abcdefgh12345678+-!?/") {
+			l.Emit(TOKEN_WHITE)
+			l.Inc()
+		}
+	}
+
+}
+
+/*
+l lexer function reads black move value.
+*/
+
+//1. e4 {+0.28/19 6.4s} e5 {-0.33/22 5.7s} 2. Nf3 {+0.48/19 5.9s}
+//Nc6 {-0.29/23 6.7s} 3. Bb5 {+0.32/20 8.5s} a6 {-0.28/24 5.8s}
+func LexReadBlackMove(l *Lexer) LexFn {
+
+	if strings.HasPrefix(l.InputToEnd(), " ") {
+		l.Emit(TOKEN_BLACK)
+		l.Inc()
+		return LexReadBlackMove
+	} else {
+
+		return l.Errorf(LEXER_ERROR_MISSING_RIGHT_BRACKET)
 	}
 }
 

@@ -96,6 +96,8 @@ func LexGameInput(src string) (g Game) {
 
 func parseMoves(src string) {
 	l := lexer.BeginLexing("deneme", src)
+	l.Run()
+	fmt.Printf("%s", src)
 	for {
 		token := l.NextToken()
 
