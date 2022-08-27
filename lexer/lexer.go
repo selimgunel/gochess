@@ -161,16 +161,6 @@ func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
 	return nil
 }
 
-// isAlpha reports whether r is an alphabetic or underscore.
-func isAlpha(r rune) bool {
-	return r == '_' || unicode.IsLetter(r)
-}
-
-// isAlphaNumeric reports whether r is an alphabetic, digit, or underscore.
-func isAlphaNumeric(r rune) bool {
-	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
-}
-
 // isDigit reports whether r is a digit.
 func isDigit(r rune) bool {
 	return unicode.IsDigit(r)
@@ -183,58 +173,6 @@ var opTable = [...]TokenName{
 	'(': LEFT_ROUND_BRACKET,
 	')': RIGHT_ROUND_BRACKET,
 	'.': DOT,
-}
-
-// isMove reports whether r is a file.
-func isFile(r rune) bool {
-
-	return strings.ContainsRune("abcdefgh", r)
-}
-
-// isRank reports whether r is a file.
-func isRank(r rune) bool {
-
-	return strings.ContainsRune("12345678", r)
-}
-
-func lexWhite(l *Lexer) stateFn {
-
-out:
-	for {
-		switch r := l.next(); {
-		case r == ' ' || r == '.':
-			l.ignore()
-		case isMove(r):
-		case r == ' ':
-			break out
-
-		}
-	}
-
-	l.emit(WHITE)
-
-	return lexBlack
-}
-
-func lexBlack(l *Lexer) stateFn {
-L:
-	for {
-		switch r := l.next(); {
-		case r == ' ' || r == '.':
-			l.ignore()
-		case isFile(r):
-		case isRank(r):
-			break L
-		case r == '{':
-			l.emit(BLACK)
-			l.backup()
-			return lexComment
-		}
-	}
-
-	l.emit(BLACK)
-
-	return lexText
 }
 
 func lexComment(l *Lexer) stateFn {
@@ -263,7 +201,7 @@ func lexMove(l *Lexer) stateFn {
 	for {
 
 		r := l.next()
-
+		fmt.Printf("%c\n", r)
 		if !isMove(r) {
 			break
 		}
@@ -281,7 +219,7 @@ func isMoveStart(r rune) bool {
 
 // isMove reports whether r has a valid letter.
 func isMove(r rune) bool {
-	return strings.ContainsRune("KQRBNabcdefgh12345678x!?/0-O", r)
+	return strings.ContainsRune("KQRBNabcdefgh0123456789x!?/-O+", r)
 }
 
 func lexText(l *Lexer) stateFn {
