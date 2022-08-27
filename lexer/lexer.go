@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"fmt"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -34,7 +35,7 @@ const (
 	RIGHT_ROUND_BRACKET
 	NEWLINE
 	COMMENT
-
+	NUMBER
 	//Move tokens e4 cx5!
 	WHITE
 	BLACK
@@ -63,6 +64,7 @@ var tokenNames = []string{
 	COMMENT:             "COMMENT",
 	WHITE:               "WHITE",
 	BLACK:               "BLACK",
+	NUMBER:              "NUMBER",
 	TURN_NUMBER:         "TURN_NUMBER",
 	DOT:                 "DOT",
 	TREE_DOT:            "TREE_DOT",
@@ -174,6 +176,60 @@ func isDigit(r rune) bool {
 	return unicode.IsDigit(r)
 }
 
+// isMove reports whether r is a move.
+func isMove(m string) bool {
+	strings.IndexAny(,"abcdefgh")
+	return unicode.IsDigit(r)
+}
+
+// Operator table for lookups.
+var opTable = [...]TokenName{
+	'{': LEFT_CURLY_BRACKET,
+	'}': RIGHT_CURLY_BRACKET,
+	'(': LEFT_ROUND_BRACKET,
+	')': RIGHT_ROUND_BRACKET,
+	'.': DOT,
+}
+
+func lexComment(l *Lexer) stateFn {
+	r := l.next()
+	for r != eof && r != '\n' {
+		r = l.next()
+	}
+	l.backup()
+	l.emit(COMMENT)
+	return lexText
+}
+
+func lexNumber(l *Lexer) stateFn {
+	for {
+		r := l.next()
+		if isDigit(r) {
+
+		} else if r == '.' {
+			break
+		}
+	}
+	l.backup()
+	l.emit(TURN_NUMBER)
+	return lexText
+}
+
+func lexMove(l *Lexer) stateFn {
+	for {
+		r := l.next()
+		if isDigit(r) {
+
+		} else if r == '.' {
+			break
+		}
+	}
+	l.backup()
+	l.emit(TURN_NUMBER)
+	return lexText
+}
+
+
 func lexText(l *Lexer) stateFn {
 
 	for {
@@ -183,20 +239,25 @@ func lexText(l *Lexer) stateFn {
 			return nil
 		case r == ' ' || r == '\t' || r == '\n' || r == '\r':
 			l.ignore()
-		case int(r) < len(opTable) && opTable[r] != ERROR:
-			op := opTable[r]
-			if op == DIVIDE && l.peek() == '/' {
-				return lexComment
-			}
-			l.emit(op)
-		case isAlpha(r):
-			l.backup()
-			return lexIdentifier
+		case r == '{':
+			return lexComment
 		case isDigit(r):
 			l.backup()
 			return lexNumber
-		case r == '"':
-			return lexQuote
+
 		}
 	}
+}
+
+func TokenizeAllAppend(input string) []Token {
+	var tokens []Token
+	l := Lex(input)
+	for {
+		token := l.NextToken()
+		tokens = append(tokens, token)
+		if token.Name == EOF || token.Name == ERROR {
+			break
+		}
+	}
+	return tokens
 }

@@ -21,7 +21,7 @@ const (
 type Tag [2]string
 type Game struct {
 	Tags   []Tag
-	Moves  []string
+	Moves  string
 	Result string
 }
 
@@ -95,13 +95,9 @@ func LexGameInput(src string) (g Game) {
 }
 
 func parseMoves(src string) {
-	l := lexer.BeginLexing("deneme", src)
-
-	//fmt.Printf("%s", src)
-	for {
-		token := l.NextToken()
-
-		fmt.Printf("%+v\n", token)
+	ss := lexer.TokenizeAllAppend(src)
+	for _, v := range ss {
+		fmt.Printf("<%s>\n", v)
 	}
 }
 
@@ -124,10 +120,8 @@ func (g Game) String() string {
 		fmt.Fprintf(&sb, "%s", t)
 	}
 
-	for i, v := range g.Moves {
-		fmt.Fprintf(&sb, "%d: %s", i, v)
-		sb.WriteRune('\n')
-	}
+	fmt.Fprintf(&sb, "%s", g.Moves)
+
 	return sb.String()
 }
 
@@ -138,6 +132,7 @@ func (g Game) IsEmpty() bool {
 
 //ParseMoves
 func (g Game) ParseMoves() {
+	lexer.TokenizeAllAppend(g.Moves)
 
 }
 
