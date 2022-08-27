@@ -53,10 +53,11 @@ func main() {
 	}
 
 	g := LexGameInput(sa[0])
-	//fmt.Printf("%s", g)
-	for _, v := range g.Tags {
-		fmt.Printf("%s", v)
-	}
+
+	fmt.Printf("%s", g)
+	// for _, v := range g.Moves {
+	// 	fmt.Printf("%s", v)
+	// }
 }
 
 func LexGameInput(src string) (g Game) {

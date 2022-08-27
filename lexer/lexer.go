@@ -176,12 +176,6 @@ func isDigit(r rune) bool {
 	return unicode.IsDigit(r)
 }
 
-// isMove reports whether r is a move.
-func isMove(m string) bool {
-	strings.IndexAny(,"abcdefgh")
-	return unicode.IsDigit(r)
-}
-
 // Operator table for lookups.
 var opTable = [...]TokenName{
 	'{': LEFT_CURLY_BRACKET,
@@ -191,9 +185,61 @@ var opTable = [...]TokenName{
 	'.': DOT,
 }
 
+// isMove reports whether r is a file.
+func isFile(r rune) bool {
+
+	return strings.ContainsRune("abcdefgh", r)
+}
+
+// isRank reports whether r is a file.
+func isRank(r rune) bool {
+
+	return strings.ContainsRune("12345678", r)
+}
+
+func lexWhite(l *Lexer) stateFn {
+
+out:
+	for {
+		switch r := l.next(); {
+		case r == ' ' || r == '.':
+			l.ignore()
+		case isMove(r):
+		case r == ' ':
+			break out
+
+		}
+	}
+
+	l.emit(WHITE)
+
+	return lexBlack
+}
+
+func lexBlack(l *Lexer) stateFn {
+L:
+	for {
+		switch r := l.next(); {
+		case r == ' ' || r == '.':
+			l.ignore()
+		case isFile(r):
+		case isRank(r):
+			break L
+		case r == '{':
+			l.emit(BLACK)
+			l.backup()
+			return lexComment
+		}
+	}
+
+	l.emit(BLACK)
+
+	return lexText
+}
+
 func lexComment(l *Lexer) stateFn {
 	r := l.next()
-	for r != eof && r != '\n' {
+	for r != eof && r != '\n' && r != '}' {
 		r = l.next()
 	}
 	l.backup()
@@ -204,31 +250,39 @@ func lexComment(l *Lexer) stateFn {
 func lexNumber(l *Lexer) stateFn {
 	for {
 		r := l.next()
-		if isDigit(r) {
+		if r == '.' {
 
-		} else if r == '.' {
 			break
 		}
 	}
-	l.backup()
 	l.emit(TURN_NUMBER)
 	return lexText
 }
 
 func lexMove(l *Lexer) stateFn {
 	for {
-		r := l.next()
-		if isDigit(r) {
 
-		} else if r == '.' {
+		r := l.next()
+
+		if !isMove(r) {
 			break
 		}
+
 	}
 	l.backup()
-	l.emit(TURN_NUMBER)
+	l.emit(BLACK)
 	return lexText
 }
 
+// isMove reports whether r has a valid letter.
+func isMoveStart(r rune) bool {
+	return strings.ContainsRune("KQRBNabcdefghO", r)
+}
+
+// isMove reports whether r has a valid letter.
+func isMove(r rune) bool {
+	return strings.ContainsRune("KQRBNabcdefgh12345678x!?/0-O", r)
+}
 
 func lexText(l *Lexer) stateFn {
 
@@ -240,10 +294,18 @@ func lexText(l *Lexer) stateFn {
 		case r == ' ' || r == '\t' || r == '\n' || r == '\r':
 			l.ignore()
 		case r == '{':
+			l.ignore()
 			return lexComment
+		case r == '}':
+			l.emit(RIGHT_CURLY_BRACKET)
 		case isDigit(r):
 			l.backup()
 			return lexNumber
+		case isMoveStart(r):
+			l.backup()
+			return lexMove
+		default:
+			l.emit(ERROR)
 
 		}
 	}
