@@ -2,381 +2,201 @@ package lexer
 
 import (
 	"fmt"
-	"strings"
 	"unicode"
 	"unicode/utf8"
 )
 
+// Token represents a single token in the input stream.
+// Name: mnemonic name (numeric).
+// Val: string value of the token from the original stream.
+// Pos: position - offset from beginning of stream.
 type Token struct {
-	Type  TokenType
-	Value string
+	Name TokenName
+	Val  string
+	Pos  int
 }
 
-type TokenType int
-
-const EOF rune = 0
-
-const LEFT_CURLY_BRACKET string = "{"
-const RIGHT_CURLY_BRACKET string = "}"
-const LEFT_ROUND_BRACKET string = "("
-const RIGHT_ROUND_BRACKET string = ")"
-const DOT string = "."
-
-const EQUAL_SIGN string = "="
-const NEWLINE string = "\n"
+type TokenName int
 
 const (
 	LEXER_ERROR_UNEXPECTED_EOF        string = "Unexpected end of file"
-	LEXER_ERROR_MISSING_RIGHT_BRACKET string = "Missing a closing section"
+	LEXER_ERROR_MISSING_RIGHT_BRACKET string = "Missing a closing comment"
 	LEXER_ERROR_MOVE_NUMBER_EXPECTED  string = "A digit expected"
 )
 
 const (
-	TOKEN_ERROR TokenType = iota
-	TOKEN_EOF
+	ERROR TokenName = iota
+	EOF
 
-	TOKEN_LEFT_CURLY_BRACKET
-	TOKEN_RIGHT_CURLY_BRACKET
-	TOKEN_LEFT_ROUND_BRACKET
-	TOKEN_RIGHT_ROUND_BRACKET
-	TOKEN_NEWLINE
-	TOKEN_COMMENT
+	LEFT_CURLY_BRACKET
+	RIGHT_CURLY_BRACKET
+	LEFT_ROUND_BRACKET
+	RIGHT_ROUND_BRACKET
+	NEWLINE
+	COMMENT
 
 	//Move tokens e4 cx5!
-	TOKEN_WHITE
-	TOKEN_BLACK
+	WHITE
+	BLACK
 	//Move related tokens. 1.c4 or 8...d5
-	TOKEN_TURN_NUMBER
-	TOKEN_DOT
-	TOKEN_TREE_DOT
-	TOKEN_RANK
-	TOKEN_FILE
+	TURN_NUMBER
+	DOT
+	TREE_DOT
+	RANK
+	FILE
 
-	TOKEN_CHECK //Qd4+
+	CHECK //Qd4+
 
-	TOKEN_CAPTURE //Qxd4
+	CAPTURE //Qxd4
 
 )
+const eof = -1
 
-type LexFn func(*Lexer) LexFn
+var tokenNames = []string{
+	ERROR:               "ERROR",
+	EOF:                 "EOF",
+	LEFT_CURLY_BRACKET:  "LEFT_CURLY_BRACKET",
+	RIGHT_CURLY_BRACKET: "RIGHT_CURLY_BRACKET",
+	LEFT_ROUND_BRACKET:  "LEFT_ROUND_BRACKET",
+	RIGHT_ROUND_BRACKET: "RIGHT_ROUND_BRACKET",
+	NEWLINE:             "NEWLINE",
+	COMMENT:             "COMMENT",
+	WHITE:               "WHITE",
+	BLACK:               "BLACK",
+	TURN_NUMBER:         "TURN_NUMBER",
+	DOT:                 "DOT",
+	TREE_DOT:            "TREE_DOT",
+	RANK:                "RANK",
+	FILE:                "FILE",
+	CHECK:               "CHECK",
+	CAPTURE:             "CAPTURE",
+}
+
+func (tok Token) String() string {
+	return fmt.Sprintf("Token{%s, '%s', %d}", tokenNames[tok.Name], tok.Val, tok.Pos)
+}
 
 type Lexer struct {
-	Name   string
-	Input  string
-	Tokens chan Token
-	State  LexFn
-
-	Start int
-	Pos   int
-	Width int
+	input  string     // the string being scanned
+	start  int        // start position of this tokens
+	pos    int        // current position of the input
+	width  int        // width of last rune read from input
+	tokens chan Token // channel of scanned tokens
 }
 
-/*
-l lexer function starts everything off. It determines if we are
-beginning with a key/value assignment or a section.
-*/
-func LexBegin(l *Lexer) LexFn {
-	l.SkipWhitespace()
+type stateFn func(*Lexer) stateFn
 
-	if strings.HasPrefix(l.InputToEnd(), LEFT_CURLY_BRACKET) {
-		return LexLeftCurlyBracket
-	} else if strings.ContainsAny(l.InputToEnd(), "123456789") {
-		return LexReadMove
-	} else {
-		return l.Errorf("lexer: ", LEXER_ERROR_MOVE_NUMBER_EXPECTED)
-	}
-
-}
-
-/*
-l lexer function emits a TOKEN_COMMENT then returns
-the lexer for value.
-*/
-func LexLeftCurlyBracket(l *Lexer) LexFn {
-	l.Pos += len(LEFT_CURLY_BRACKET)
-	l.Emit(TOKEN_LEFT_CURLY_BRACKET)
-	return LexComment
-}
-
-/*
-l lexer function emits a TOKEN_COMMENT then returns
-the lexer for value.
-*/
-func LexComment(l *Lexer) LexFn {
-	for {
-		if l.IsEOF() {
-			return l.Errorf(LEXER_ERROR_MISSING_RIGHT_BRACKET)
-		}
-
-		if strings.HasPrefix(l.InputToEnd(), RIGHT_CURLY_BRACKET) {
-			l.Emit(TOKEN_COMMENT)
-			return LexRightCurlyBracket
-		}
-
-		l.Inc()
-	}
-}
-
-/*
-l lexer function emits a TOKEN_COMMENT then returns
-the lexer for value.
-*/
-func LexRightCurlyBracket(l *Lexer) LexFn {
-	l.Pos += len(RIGHT_CURLY_BRACKET)
-	l.Emit(TOKEN_RIGHT_CURLY_BRACKET)
-	return LexReadMove
-}
-
-/*
-l lexer function emits a TOKEN_COMMENT then returns
-the lexer for value.
-*/
-func LexReadMove(l *Lexer) LexFn {
-
-	for {
-
-		if unicode.IsDigit(l.Peek()) {
-			l.Emit(TOKEN_TURN_NUMBER)
-			return LexReadTurnNumber
-		}
-
-		l.Inc()
-	}
-}
-
-/*
-l lexer function emits a Turn Number then returns
-the lexer for value.
-*/
-func LexReadTurnNumber(l *Lexer) LexFn {
-	l.SkipWhitespace()
-	if strings.HasPrefix(l.InputToEnd(), DOT) {
-		l.Emit(TOKEN_TURN_NUMBER)
-		l.Inc()
-		return LexReadWhiteMove
-	} else {
-
-		return l.Errorf(LEXER_ERROR_MISSING_RIGHT_BRACKET)
-	}
-
-}
-
-/*
-l lexer function reads white move value.
-*/
-func LexReadWhiteMove(l *Lexer) LexFn {
-
-	for {
-
-		if strings.HasPrefix(l.InputToEnd(), " ") {
-			l.Ignore()
-
-		} else if strings.HasPrefix(l.InputToEnd(), "{") {
-			return LexComment
-		} else if strings.ContainsAny(l.InputToEnd(), "abcdefgh12345678+-!?/") {
-			l.Emit(TOKEN_WHITE)
-			l.Inc()
-		}
-	}
-
-}
-
-/*
-l lexer function reads black move value.
-*/
-
-//1. e4 {+0.28/19 6.4s} e5 {-0.33/22 5.7s} 2. Nf3 {+0.48/19 5.9s}
-//Nc6 {-0.29/23 6.7s} 3. Bb5 {+0.32/20 8.5s} a6 {-0.28/24 5.8s}
-func LexReadBlackMove(l *Lexer) LexFn {
-
-	if strings.HasPrefix(l.InputToEnd(), " ") {
-		l.Emit(TOKEN_BLACK)
-		l.Inc()
-		return LexReadBlackMove
-	} else {
-
-		return l.Errorf(LEXER_ERROR_MISSING_RIGHT_BRACKET)
-	}
-}
-
-/*
-Start a new lexer with a given input string. l returns the
-instance of the lexer and a channel of tokens. Reading l stream
-is the way to parse a given input and perform processing.
-*/
-func BeginLexing(name, input string) *Lexer {
+// Lex creates a new Lexer
+func Lex(input string) *Lexer {
 	l := &Lexer{
-		Name:   name,
-		Input:  input,
-		State:  LexBegin,
-		Tokens: make(chan Token, 3),
+		input:  input,
+		tokens: make(chan Token),
 	}
-
+	go l.run()
 	return l
 }
 
-/*
-Backup to the beginning of the last read token.
-*/
-func (l *Lexer) Backup() {
-	l.Pos -= l.Width
+// NextToken returns the next item from the input. The Lexer has to be
+// drained (all tokens received until itemEOF or itemError) - otherwise
+// the Lexer goroutine will leak.
+func (l *Lexer) NextToken() Token {
+	return <-l.tokens
 }
 
-/*
-Returns a slice of the current input from the current lexer start position
-to the current position.
-*/
-func (l *Lexer) CurrentInput() string {
-	return l.Input[l.Start:l.Pos]
-}
-
-/*
-Decrement the position
-*/
-func (l *Lexer) Dec() {
-	l.Pos--
-}
-
-/*
-Puts a token onto the token channel. The value of l token is
-read from the input based on the current lexer position.
-*/
-func (l *Lexer) Emit(tokenType TokenType) {
-	l.Tokens <- Token{Type: tokenType, Value: l.Input[l.Start:l.Pos]}
-	l.Start = l.Pos
-}
-
-/*
-Returns a token with error information.
-*/
-func (l *Lexer) Errorf(format string, args ...interface{}) LexFn {
-	l.Tokens <- Token{
-		Type:  TOKEN_ERROR,
-		Value: fmt.Sprintf(format, args...),
+// run runs the lexer - should be run in a separate goroutine.
+func (l *Lexer) run() {
+	for state := lexText; state != nil; {
+		state = state(l)
 	}
+	close(l.tokens) // no more tokens will be delivered
+}
 
+func (l *Lexer) emit(name TokenName) {
+	l.tokens <- Token{
+		Name: name,
+		Val:  l.input[l.start:l.pos],
+		Pos:  l.start,
+	}
+	l.start = l.pos
+}
+
+// next advances to the next rune in input and returns it
+func (l *Lexer) next() (r rune) {
+	if l.pos >= len(l.input) {
+		l.width = 0
+		return eof
+	}
+	r, l.width = utf8.DecodeRuneInString(l.input[l.pos:])
+	l.pos += l.width
+	return r
+}
+
+// ignore skips over the pending input before this point
+func (l *Lexer) ignore() {
+	l.start = l.pos
+}
+
+// backup steps back one rune. Can be called only once per call of next.
+func (l *Lexer) backup() {
+	l.pos -= l.width
+}
+
+// peek returns but does not consume the next run in the input.
+func (l *Lexer) peek() rune {
+	r := l.next()
+	l.backup()
+	return r
+}
+
+// errorf returns an error token and terminates the scan by passing back
+// a nil pointer that will be the next state.
+func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
+	l.tokens <- Token{
+		Name: ERROR,
+		Val:  fmt.Sprintf(format, args...),
+		Pos:  l.pos,
+	}
 	return nil
 }
 
-/*
-Ignores the current token by setting the lexer's start
-position to the current reading position.
-*/
-func (l *Lexer) Ignore() {
-	l.Start = l.Pos
+// isAlpha reports whether r is an alphabetic or underscore.
+func isAlpha(r rune) bool {
+	return r == '_' || unicode.IsLetter(r)
 }
 
-/*
-Increment the position
-*/
-func (l *Lexer) Inc() {
-	l.Pos++
-	if l.Pos >= utf8.RuneCountInString(l.Input) {
-		l.Emit(TOKEN_EOF)
-	}
+// isAlphaNumeric reports whether r is an alphabetic, digit, or underscore.
+func isAlphaNumeric(r rune) bool {
+	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
-/*
-Return a slice of the input from the current lexer position
-to the end of the input string.
-*/
-func (l *Lexer) InputToEnd() string {
-	return l.Input[l.Pos:]
+// isDigit reports whether r is a digit.
+func isDigit(r rune) bool {
+	return unicode.IsDigit(r)
 }
 
-/*
-Returns the true/false if the lexer is at the end of the
-input stream.
-*/
-func (l *Lexer) IsEOF() bool {
-	return l.Pos >= len(l.Input)
-}
+func lexText(l *Lexer) stateFn {
 
-/*
-Returns true/false if then next character is whitespace
-*/
-func (l *Lexer) IsWhitespace() bool {
-	ch, _ := utf8.DecodeRuneInString(l.Input[l.Pos:])
-	return unicode.IsSpace(ch)
-}
-
-/*
-Reads the next rune (character) from the input stream
-and advances the lexer position.
-*/
-func (l *Lexer) Next() rune {
-	if l.Pos >= utf8.RuneCountInString(l.Input) {
-		l.Width = 0
-		return EOF
-	}
-
-	result, width := utf8.DecodeRuneInString(l.Input[l.Pos:])
-
-	l.Width = width
-	l.Pos += l.Width
-	return result
-}
-
-/*
-Return the next token from the channel
-*/
-func (l *Lexer) NextToken() Token {
 	for {
-		select {
-		case token := <-l.Tokens:
-			return token
-		default:
-			l.State = l.State(l)
-		}
-	}
-
-}
-
-/*
-Returns the next rune in the stream, then puts the lexer
-position back. Basically reads the next rune without consuming
-it.
-*/
-func (l *Lexer) Peek() rune {
-	rune := l.Next()
-	l.Backup()
-	return rune
-}
-
-/*
-Starts the lexical analysis and feeding tokens into the
-token channel.
-*/
-func (l *Lexer) Run() {
-	for state := LexBegin; state != nil; {
-		state = state(l)
-	}
-
-	l.Shutdown()
-}
-
-/*
-Shuts down the token stream
-*/
-func (l *Lexer) Shutdown() {
-	close(l.Tokens)
-}
-
-/*
-Skips whitespace until we get something meaningful.
-*/
-func (l *Lexer) SkipWhitespace() {
-	for {
-		ch := l.Next()
-
-		if !unicode.IsSpace(ch) {
-			l.Dec()
-			break
-		}
-
-		if ch == EOF {
-			l.Emit(TOKEN_EOF)
-			break
+		switch r := l.next(); {
+		case r == eof:
+			l.emit(EOF)
+			return nil
+		case r == ' ' || r == '\t' || r == '\n' || r == '\r':
+			l.ignore()
+		case int(r) < len(opTable) && opTable[r] != ERROR:
+			op := opTable[r]
+			if op == DIVIDE && l.peek() == '/' {
+				return lexComment
+			}
+			l.emit(op)
+		case isAlpha(r):
+			l.backup()
+			return lexIdentifier
+		case isDigit(r):
+			l.backup()
+			return lexNumber
+		case r == '"':
+			return lexQuote
 		}
 	}
 }
