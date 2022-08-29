@@ -29,6 +29,7 @@ const (
 	ERROR TokenName = iota
 	EOF
 
+	TAG
 	LEFT_CURLY_BRACKET
 	RIGHT_CURLY_BRACKET
 	LEFT_ROUND_BRACKET
@@ -56,6 +57,7 @@ const eof = -1
 var tokenNames = []string{
 	ERROR:               "ERROR",
 	EOF:                 "EOF",
+	TAG:                 "TAG",
 	LEFT_CURLY_BRACKET:  "LEFT_CURLY_BRACKET",
 	RIGHT_CURLY_BRACKET: "RIGHT_CURLY_BRACKET",
 	LEFT_ROUND_BRACKET:  "LEFT_ROUND_BRACKET",
@@ -110,6 +112,7 @@ func (l *Lexer) run() {
 	for state := lexText; state != nil; {
 		state = state(l)
 	}
+	fmt.Println("should read")
 	close(l.tokens) // no more tokens will be delivered
 }
 
@@ -180,16 +183,16 @@ func lexComment(l *Lexer) stateFn {
 	for r != eof && r != '\n' && r != '}' {
 		r = l.next()
 	}
-	l.backup()
-	l.emit(COMMENT)
+	l.ignore()
 	return lexText
 }
 
 func lexNumber(l *Lexer) stateFn {
 	for {
 		r := l.next()
-		if r == '.' {
 
+		if r == '.' {
+			l.backup()
 			break
 		}
 	}
@@ -201,14 +204,29 @@ func lexMove(l *Lexer) stateFn {
 	for {
 
 		r := l.next()
-		fmt.Printf("%c\n", r)
 		if !isMove(r) {
 			break
 		}
-
 	}
 	l.backup()
 	l.emit(BLACK)
+	return lexText
+}
+
+func lexTag(l *Lexer) stateFn {
+
+out:
+	for {
+		r := l.next()
+		if r != ']' {
+			l.next()
+		} else {
+			break out
+		}
+
+	}
+
+	l.emit(TAG)
 	return lexText
 }
 
@@ -228,22 +246,25 @@ func lexText(l *Lexer) stateFn {
 		switch r := l.next(); {
 		case r == eof:
 			l.emit(EOF)
-			return nil
-		case r == ' ' || r == '\t' || r == '\n' || r == '\r':
+		case r == ' ' || r == '\t' || r == '\n' || r == '\r' || r == '.':
 			l.ignore()
 		case r == '{':
 			l.ignore()
 			return lexComment
-		case r == '}':
-			l.emit(RIGHT_CURLY_BRACKET)
+
 		case isDigit(r):
 			l.backup()
 			return lexNumber
 		case isMoveStart(r):
 			l.backup()
 			return lexMove
+		case r == '[':
+			l.backup()
+			return lexTag
 		default:
+			fmt.Printf("shouldn't reach here\n")
 			l.emit(ERROR)
+			return nil
 
 		}
 	}
@@ -251,6 +272,20 @@ func lexText(l *Lexer) stateFn {
 
 func TokenizeAllAppend(input string) []Token {
 	var tokens []Token
+	l := Lex(input)
+	for {
+		token := l.NextToken()
+		fmt.Printf("tok: %s\n", token)
+		tokens = append(tokens, token)
+		if token.Name == EOF || token.Name == ERROR {
+			break
+		}
+	}
+	return tokens
+}
+
+func TokenizeAllPrealloc(input string) []Token {
+	tokens := make([]Token, 0, 200000)
 	l := Lex(input)
 	for {
 		token := l.NextToken()

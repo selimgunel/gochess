@@ -6,6 +6,9 @@ import (
 	"os"
 	"strings"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/narslan/schach/pgnparser/lexer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -20,13 +23,15 @@ const (
 
 type Tag [2]string
 type Game struct {
-	Tags   []Tag
+	Tags   []*Tag
 	Moves  string
 	Result string
 }
 
 func main() {
-
+	go func() {
+		fmt.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// An artificial input source.
@@ -39,7 +44,6 @@ func main() {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-
 	scanner.Split(crunchSplitFunc)
 
 	sa := make([]string, 0)
@@ -52,59 +56,31 @@ func main() {
 		sa = append(sa, "["+t)
 	}
 
-	g := LexGameInput(sa[0])
+	LexGameInput(sa[0])
+	//fmt.Printf("%d", len(sa))
+	//	for _, v := range sa {
+	//		fmt.Printf("%s\n", v)
+	//	}
+	//LexGameInput(sa[0])
 
-	fmt.Printf("%s", g)
+	//fmt.Printf("%s", g)
+	//g.ParseMoves()
 	// for _, v := range g.Moves {
 	// 	fmt.Printf("%s", v)
 	// }
 }
 
 func LexGameInput(src string) (g Game) {
-
-	s := bufio.NewScanner(strings.NewReader(src))
-
-	g.Tags = make([]Tag, 0)
-
-	tags := make([]Tag, 0)
-	var movesSrc strings.Builder
-	for s.Scan() {
-
-		l := s.Text()
-		if l == "" {
-			continue
-		}
-
-		if strings.Index(l, "[") == 0 {
-			// splitted tags into key and value.
-			//fmt.Printf("tag: %s", l)
-			stags := strings.Split(l[1:len(l)-1], " ")
-			k := stags[0]
-			v := strings.ReplaceAll(stags[1], "\"", "")
-			tagnames := [2]string{k, v}
-			tags = append(tags, tagnames)
-			continue
-		}
-		fmt.Fprintf(&movesSrc, "%s", l)
-	}
-	if err := s.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading input:", err)
-	}
-	parseMoves(movesSrc.String())
-	g.Tags = tags
-	return
-}
-
-func parseMoves(src string) {
 	ss := lexer.TokenizeAllAppend(src)
 	for _, v := range ss {
-		fmt.Printf("<%s>\n", v)
+		fmt.Printf("heeey %v", v)
 	}
+	return
 }
 
 //Tags
 
-func (t Tag) String() string {
+func (t *Tag) String() string {
 	var sb strings.Builder
 
 	fmt.Fprintf(&sb, "%13s", t[0])
@@ -121,7 +97,7 @@ func (g Game) String() string {
 		fmt.Fprintf(&sb, "%s", t)
 	}
 
-	fmt.Fprintf(&sb, "%s", g.Moves)
+	//fmt.Fprintf(&sb, "%s", g.Moves)
 
 	return sb.String()
 }
@@ -131,19 +107,13 @@ func (g Game) IsEmpty() bool {
 	return len(g.Tags) == 0
 }
 
-//ParseMoves
-func (g Game) ParseMoves() {
-	lexer.TokenizeAllAppend(g.Moves)
-
-}
-
 // Taken from: https://github.com/freeeve/pgn/issues/17.
 func crunchSplitFunc(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
 	}
 
-	if i := strings.Index(string(data), "[Event"); i >= 0 {
+	if i := strings.Index(string(data), "[Event "); i >= 0 {
 		return i + 1, data[0:i], nil
 	}
 
