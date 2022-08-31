@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -36,27 +35,39 @@ func main() {
 
 	// An artificial input source.
 	//f, err := os.Open("pgn/famous_games.pgn")
-	f, err := os.Open("data/counter-vs-zahak.pgn")
+	f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/data/counter-vs-zahak.pgn")
 	//f, err := os.Open("data/anders.pgn")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	scanner := bufio.NewScanner(f)
-	scanner.Split(crunchSplitFunc)
+	l := lexer.NewLexer(f)
 
-	sa := make([]string, 0)
+	for {
 
-	for scanner.Scan() {
-		t := scanner.Text()
-		if t == "" {
-			continue
+		tok := l.Scan()
+		if tok.Name == lexer.EOF || tok.Name == lexer.ERROR {
+			fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
+			break
 		}
-		sa = append(sa, "["+t)
+		fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
+
 	}
 
-	LexGameInput(sa[0])
+	// scanner := bufio.NewScanner(f)
+	// scanner.Split(crunchSplitFunc)
+
+	// sa := make([]string, 0)
+
+	// for scanner.Scan() {
+	// 	t := scanner.Text()
+	// 	if t == "" {
+	// 		continue
+	// 	}
+	// 	sa = append(sa, "["+t)
+	// }
+
 	//fmt.Printf("%d", len(sa))
 	//	for _, v := range sa {
 	//		fmt.Printf("%s\n", v)
@@ -68,14 +79,6 @@ func main() {
 	// for _, v := range g.Moves {
 	// 	fmt.Printf("%s", v)
 	// }
-}
-
-func LexGameInput(src string) (g Game) {
-	ss := lexer.TokenizeAllAppend(src)
-	for _, v := range ss {
-		fmt.Printf("heeey %v", v)
-	}
-	return
 }
 
 //Tags
