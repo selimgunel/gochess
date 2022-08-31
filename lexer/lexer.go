@@ -109,7 +109,7 @@ func (s *Lexer) Scan() (tok Token) {
 func (s *Lexer) readTurnNumber() (tok Token) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
-	buf.WriteRune(s.read())
+
 	// Read every subsequent whitespace character into the buffer.
 	// Non-whitespace characters and EOF will cause the loop to exit.
 	for {
