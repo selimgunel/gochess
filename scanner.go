@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -34,48 +35,44 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// An artificial input source.
-	//f, err := os.Open("pgn/famous_games.pgn")
-	f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/data/counter-vs-zahak.pgn")
+	f, err := os.Open("pgn/famous_games.pgn")
+	//f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/data/counter-vs-zahak.pgn")
 	//f, err := os.Open("data/anders.pgn")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	l := lexer.NewLexer(f)
+	scanner := bufio.NewScanner(f)
+	scanner.Split(crunchSplitFunc)
 
-	for {
+	sa := make([]string, 0)
 
-		tok := l.Scan()
-		if tok.Name == lexer.EOF || tok.Name == lexer.ERROR {
-			fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
-			break
-		}
-		if tok.Name == lexer.NEWLINE {
+	for scanner.Scan() {
+		t := scanner.Text()
+		if t == "" {
 			continue
 		}
-		fmt.Printf("%s\n", tok)
-
+		sa = append(sa, "["+t)
 	}
 
-	// scanner := bufio.NewScanner(f)
-	// scanner.Split(crunchSplitFunc)
+	for _, g := range sa {
+		l := lexer.NewLexer(strings.NewReader(g))
 
-	// sa := make([]string, 0)
+		for {
 
-	// for scanner.Scan() {
-	// 	t := scanner.Text()
-	// 	if t == "" {
-	// 		continue
-	// 	}
-	// 	sa = append(sa, "["+t)
-	// }
+			tok := l.Scan()
+			if tok.Name == lexer.EOF || tok.Name == lexer.ERROR {
+				fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
+				break
+			}
+			if tok.Name == lexer.NEWLINE {
+				continue
+			}
+			fmt.Printf("%s\n", tok)
 
-	//fmt.Printf("%d", len(sa))
-	//	for _, v := range sa {
-	//		fmt.Printf("%s\n", v)
-	//	}
-	//LexGameInput(sa[0])
+		}
+	}
 
 	//fmt.Printf("%s", g)
 	//g.ParseMoves()

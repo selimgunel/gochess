@@ -31,17 +31,17 @@ var tokenNames = []string{
 	RIGHT_ROUND_BRACKET: "RIGHT_ROUND_BRACKET",
 	NEWLINE:             "NEWLINE",
 	COMMENT:             "COMMENT",
-	WHITE:               "WHITE",
-	BLACK:               "BLACK",
-	NUMBER:              "NUMBER",
-	TURN_NUMBER:         "TURN_NUMBER",
-	DOT:                 "DOT",
-	TREE_DOT:            "TREE_DOT",
-	RANK:                "RANK",
-	FILE:                "FILE",
-	CHECK:               "CHECK",
-	CAPTURE:             "CAPTURE",
-	WS:                  "WS",
+	MOVE:                "MOVE",
+
+	NUMBER:      "NUMBER",
+	TURN_NUMBER: "TURN_NUMBER",
+	DOT:         "DOT",
+	TREE_DOT:    "TREE_DOT",
+	RANK:        "RANK",
+	FILE:        "FILE",
+	CHECK:       "CHECK",
+	CAPTURE:     "CAPTURE",
+	WS:          "WS",
 }
 
 func (tok Token) String() string {
@@ -100,12 +100,10 @@ func (s *Lexer) Scan() (tok Token) {
 	case ' ':
 		return s.readMove()
 	default:
-		fmt.Printf("default case")
+		s.unread()
 		return s.readMove()
 
 	}
-
-	return Token{Name: ERROR, Val: fmt.Sprintf("budur:%c", ch), Pos: s.pos}
 
 }
 
@@ -146,7 +144,7 @@ func (s *Lexer) readMove() (tok Token) {
 		}
 
 	}
-	return Token{Name: WHITE, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
+	return Token{Name: MOVE, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
 }
 
 func isMove(ch rune) bool {
