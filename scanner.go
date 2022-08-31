@@ -51,7 +51,10 @@ func main() {
 			fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
 			break
 		}
-		fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
+		if tok.Name == lexer.NEWLINE {
+			continue
+		}
+		fmt.Printf("%s\n", tok)
 
 	}
 

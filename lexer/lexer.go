@@ -97,8 +97,12 @@ func (s *Lexer) Scan() (tok Token) {
 	case '{':
 		s.unread()
 		return s.readComment()
+	case ' ':
+		return s.readMove()
 	default:
-		s.r.Discard(1)
+		fmt.Printf("default case")
+		return s.readMove()
+
 	}
 
 	return Token{Name: ERROR, Val: fmt.Sprintf("budur:%c", ch), Pos: s.pos}
@@ -116,13 +120,12 @@ func (s *Lexer) readTurnNumber() (tok Token) {
 		if ch := s.read(); ch == eof {
 			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
 		} else if ch == '.' {
-			s.unread()
 			break
 		} else {
 			buf.WriteRune(ch)
 		}
 	}
-	return Token{Name: TURN_NUMBER, Val: buf.String(), Pos: s.pos}
+	return Token{Name: TURN_NUMBER, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
 }
 
 // readTag consumes the current rune and all contiguous whitespace.
@@ -137,14 +140,17 @@ func (s *Lexer) readMove() (tok Token) {
 			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
 		} else if isMove(ch) {
 			buf.WriteRune(ch)
-
 		} else {
-			s.unread()
+
 			break
 		}
 
 	}
-	return Token{Name: WHITE, Val: buf.String(), Pos: s.Scan().Pos}
+	return Token{Name: WHITE, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
+}
+
+func isMove(ch rune) bool {
+	return strings.ContainsRune("KNRQBabcdefgh0123456789O-+x!?", ch)
 }
 
 func (s *Lexer) readTag() (tok Token) {
@@ -171,7 +177,6 @@ func (s *Lexer) readComment() (tok Token) {
 
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
-	buf.WriteRune(s.read())
 
 	// Read every subsequent whitespace character into the buffer.
 	// Non-whitespace characters and EOF will cause the loop to exit.
@@ -179,24 +184,20 @@ func (s *Lexer) readComment() (tok Token) {
 		if ch := s.read(); ch == eof {
 			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
 		} else if ch == '}' {
-			s.unread()
+
 			break
 		} else {
 			buf.WriteRune(ch)
 		}
 	}
 
-	return Token{Name: COMMENT, Val: buf.String(), Pos: s.pos}
+	return Token{Name: COMMENT, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
 }
 
 // isWhitespace returns true if the rune is a space, tab, or newline.
 func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' }
 
 func isNewline(ch rune) bool { return ch == '\n' }
-
-func isMove(ch rune) bool {
-	return strings.ContainsRune("KNRQBabcdefgh0123456789O-+x!?", ch)
-}
 
 // isLetter returns true if the rune is a letter.
 func isLetter(ch rune) bool { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') }
