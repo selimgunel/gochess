@@ -82,6 +82,14 @@ func (s *Lexer) Scan() (tok Token) {
 	ch := s.read()
 
 	if isDigit(ch) {
+		c, err := s.r.Peek(1)
+		if err != nil {
+			return Token{Name: ERROR, Val: err.Error(), Pos: s.pos}
+		}
+
+		if rune(c[0]) == '/' || rune(c[0]) == '-' {
+			return s.readResult()
+		}
 		s.unread()
 		return s.readTurnNumber()
 	}
@@ -105,6 +113,25 @@ func (s *Lexer) Scan() (tok Token) {
 
 	}
 
+}
+
+// scanWhitespace consumes the current rune and all contiguous whitespace.
+func (s *Lexer) readResult() (tok Token) {
+	// Create a buffer and read the current character into it.
+	var buf bytes.Buffer
+
+	// Read every subsequent whitespace character into the buffer.
+	// Non-whitespace characters and EOF will cause the loop to exit.
+	for {
+		if ch := s.read(); ch == eof {
+			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
+		} else if ch == '.' {
+			break
+		} else {
+			buf.WriteRune(ch)
+		}
+	}
+	return Token{Name: TURN_NUMBER, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
 }
 
 // scanWhitespace consumes the current rune and all contiguous whitespace.
@@ -138,13 +165,24 @@ func (s *Lexer) readMove() (tok Token) {
 			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
 		} else if isMove(ch) {
 			buf.WriteRune(ch)
-		} else {
+		} else if ch == '.' {
+			kl, err := s.r.Peek(2)
+			if err != nil {
+				return Token{Name: ERROR, Val: "peek error", Pos: s.pos}
+			}
+			if string(kl) == ".." {
+				s.r.Discard(2)
 
+			}
+
+		} else {
 			break
 		}
 
 	}
+
 	return Token{Name: MOVE, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
+
 }
 
 func isMove(ch rune) bool {

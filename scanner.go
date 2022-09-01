@@ -35,7 +35,9 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// An artificial input source.
-	f, err := os.Open("pgn/famous_games.pgn")
+	//f, err := os.Open("pgn/famous_games.pgn")
+	f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/data/sh.pgn")
+	//f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/pgn/stockfishvsleila.pgn")
 	//f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/data/counter-vs-zahak.pgn")
 	//f, err := os.Open("data/anders.pgn")
 	if err != nil {
