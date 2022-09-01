@@ -31,6 +31,7 @@ const (
 	RANK
 	FILE
 
+	RESULT
 	CHECK //Qd4+
 
 	CAPTURE //Qxd4

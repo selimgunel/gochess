@@ -42,6 +42,7 @@ var tokenNames = []string{
 	CHECK:       "CHECK",
 	CAPTURE:     "CAPTURE",
 	WS:          "WS",
+	RESULT:      "RESULT",
 }
 
 func (tok Token) String() string {
@@ -86,12 +87,17 @@ func (s *Lexer) Scan() (tok Token) {
 		if err != nil {
 			return Token{Name: ERROR, Val: err.Error(), Pos: s.pos}
 		}
-
-		if rune(c[0]) == '/' || rune(c[0]) == '-' {
+		chi := rune(c[0])
+		if chi == '/' || chi == '-' {
+			fmt.Println("chi burda")
+			s.unread()
 			return s.readResult()
+
+		} else {
+			s.unread()
+			return s.readTurnNumber()
+
 		}
-		s.unread()
-		return s.readTurnNumber()
 	}
 
 	switch ch {
@@ -106,8 +112,10 @@ func (s *Lexer) Scan() (tok Token) {
 		s.unread()
 		return s.readComment()
 	case ' ':
+		fmt.Println("birinci")
 		return s.readMove()
 	default:
+		fmt.Println("ikinci")
 		s.unread()
 		return s.readMove()
 
@@ -118,20 +126,19 @@ func (s *Lexer) Scan() (tok Token) {
 // scanWhitespace consumes the current rune and all contiguous whitespace.
 func (s *Lexer) readResult() (tok Token) {
 	// Create a buffer and read the current character into it.
+	fmt.Println("geldi")
+	fc := s.read()
 	var buf bytes.Buffer
+	buf.WriteRune(fc)
 
-	// Read every subsequent whitespace character into the buffer.
-	// Non-whitespace characters and EOF will cause the loop to exit.
 	for {
-		if ch := s.read(); ch == eof {
-			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
-		} else if ch == '.' {
+		chi := s.read()
+		if !isResultChar(chi) {
 			break
-		} else {
-			buf.WriteRune(ch)
 		}
 	}
-	return Token{Name: TURN_NUMBER, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
+
+	return Token{Name: RESULT, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
 }
 
 // scanWhitespace consumes the current rune and all contiguous whitespace.
@@ -185,10 +192,6 @@ func (s *Lexer) readMove() (tok Token) {
 
 }
 
-func isMove(ch rune) bool {
-	return strings.ContainsRune("KNRQBabcdefgh0123456789O-+x!?", ch)
-}
-
 func (s *Lexer) readTag() (tok Token) {
 	var buf bytes.Buffer
 
@@ -230,13 +233,12 @@ func (s *Lexer) readComment() (tok Token) {
 	return Token{Name: COMMENT, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
 }
 
-// isWhitespace returns true if the rune is a space, tab, or newline.
-func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' }
-
-func isNewline(ch rune) bool { return ch == '\n' }
-
-// isLetter returns true if the rune is a letter.
-func isLetter(ch rune) bool { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') }
-
 // isDigit returns true if the rune is a digit.
 func isDigit(ch rune) bool { return (ch >= '0' && ch <= '9') }
+
+// isDigit returns true if the rune is a digit.
+func isResultChar(ch rune) bool { return strings.ContainsRune("12/-", ch) }
+
+func isMove(ch rune) bool {
+	return strings.ContainsRune("KNRQBabcdefgh0123456789O-+x!?", ch)
+}
