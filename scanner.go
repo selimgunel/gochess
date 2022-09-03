@@ -68,6 +68,12 @@ func main() {
 				fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
 				break
 			}
+			if tok.Name == lexer.MOVE && tok.Val == "" {
+				continue
+			}
+			if tok.Name == lexer.COMMENT {
+				continue
+			}
 			if tok.Name == lexer.NEWLINE {
 				continue
 			}

@@ -82,22 +82,10 @@ func (s *Lexer) Scan() (tok Token) {
 	// Read the next rune.
 	ch := s.read()
 
+	//check if it is a digit.
 	if isDigit(ch) {
-		c, err := s.r.Peek(1)
-		if err != nil {
-			return Token{Name: ERROR, Val: err.Error(), Pos: s.pos}
-		}
-		chi := rune(c[0])
-		if chi == '/' || chi == '-' {
-			fmt.Println("chi burda")
-			s.unread()
-			return s.readResult()
-
-		} else {
-			s.unread()
-			return s.readTurnNumber()
-
-		}
+		s.unread()
+		return s.readTurnNumber()
 	}
 
 	switch ch {
@@ -111,11 +99,7 @@ func (s *Lexer) Scan() (tok Token) {
 	case '{':
 		s.unread()
 		return s.readComment()
-	case ' ':
-		fmt.Println("birinci")
-		return s.readMove()
 	default:
-		fmt.Println("ikinci")
 		s.unread()
 		return s.readMove()
 
@@ -124,34 +108,16 @@ func (s *Lexer) Scan() (tok Token) {
 }
 
 // scanWhitespace consumes the current rune and all contiguous whitespace.
-func (s *Lexer) readResult() (tok Token) {
-	// Create a buffer and read the current character into it.
-	fmt.Println("geldi")
-	fc := s.read()
-	var buf bytes.Buffer
-	buf.WriteRune(fc)
-
-	for {
-		chi := s.read()
-		if !isResultChar(chi) {
-			break
-		}
-	}
-
-	return Token{Name: RESULT, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
-}
-
-// scanWhitespace consumes the current rune and all contiguous whitespace.
 func (s *Lexer) readTurnNumber() (tok Token) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
-
 	// Read every subsequent whitespace character into the buffer.
 	// Non-whitespace characters and EOF will cause the loop to exit.
 	for {
 		if ch := s.read(); ch == eof {
 			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
 		} else if ch == '.' {
+
 			break
 		} else {
 			buf.WriteRune(ch)
@@ -172,16 +138,6 @@ func (s *Lexer) readMove() (tok Token) {
 			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
 		} else if isMove(ch) {
 			buf.WriteRune(ch)
-		} else if ch == '.' {
-			kl, err := s.r.Peek(2)
-			if err != nil {
-				return Token{Name: ERROR, Val: "peek error", Pos: s.pos}
-			}
-			if string(kl) == ".." {
-				s.r.Discard(2)
-
-			}
-
 		} else {
 			break
 		}
