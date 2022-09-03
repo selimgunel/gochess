@@ -186,6 +186,9 @@ func (s *Lexer) readComment() (tok Token) {
 		} else if ch == '}' {
 
 			break
+		} else if ch == '{' {
+			s.unread()
+			s.r.Discard(1)
 		} else {
 			buf.WriteRune(ch)
 		}
