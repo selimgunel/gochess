@@ -1,17 +1,10 @@
-package main
+package parser
 
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"strings"
-
-	"net/http"
-	_ "net/http/pprof"
-
-	"github.com/narslan/schach/pgnparser/lexer"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -28,24 +21,9 @@ type Game struct {
 	Result string
 }
 
-func main() {
-	go func() {
-		fmt.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+func Parse(input io.Reader) {
 
-	// An artificial input source.
-	//f, err := os.Open("pgn/famous_games.pgn")
-	f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/data/sh.pgn")
-	//f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/pgn/stockfishvsleila.pgn")
-	//f, err := os.Open("/home/nevroz/go/src/github.com/narslan/schach/pgnparser/data/counter-vs-zahak.pgn")
-	//f, err := os.Open("data/anders.pgn")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(input)
 	scanner.Split(crunchSplitFunc)
 
 	sa := make([]string, 0)
@@ -59,22 +37,22 @@ func main() {
 	}
 
 	for _, g := range sa {
-		l := lexer.NewLexer(strings.NewReader(g))
+		l := NewLexer(strings.NewReader(g))
 
 		for {
 
 			tok := l.Scan()
-			if tok.Name == lexer.EOF || tok.Name == lexer.ERROR {
+			if tok.Name == EOF || tok.Name == ERROR {
 				fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
 				break
 			}
-			if tok.Name == lexer.MOVE && tok.Val == "" {
+			if tok.Name == MOVE && tok.Val == "" {
 				continue
 			}
-			if tok.Name == lexer.COMMENT {
+			if tok.Name == COMMENT {
 				continue
 			}
-			if tok.Name == lexer.NEWLINE {
+			if tok.Name == NEWLINE {
 				continue
 			}
 			fmt.Printf("%s\n", tok)
@@ -82,11 +60,6 @@ func main() {
 		}
 	}
 
-	//fmt.Printf("%s", g)
-	//g.ParseMoves()
-	// for _, v := range g.Moves {
-	// 	fmt.Printf("%s", v)
-	// }
 }
 
 //Tags
@@ -107,8 +80,6 @@ func (g Game) String() string {
 	for _, t := range g.Tags {
 		fmt.Fprintf(&sb, "%s", t)
 	}
-
-	//fmt.Fprintf(&sb, "%s", g.Moves)
 
 	return sb.String()
 }

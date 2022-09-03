@@ -1,4 +1,4 @@
-package lexer
+package parser
 
 import (
 	"bufio"
@@ -7,11 +7,6 @@ import (
 	"io"
 	"strings"
 )
-
-// Token represents a single token in the input stream.
-// Name: mnemonic name (numeric).
-// Val: string value of the token from the original stream.
-// Pos: position - offset from beginning of stream.
 
 const (
 	LEXER_ERROR_UNEXPECTED_EOF        string = "Unexpected end of file"
@@ -82,7 +77,6 @@ func (s *Lexer) Scan() (tok Token) {
 	// Read the next rune.
 	ch := s.read()
 
-	//check if it is a digit.
 	if isDigit(ch) {
 		s.unread()
 		return s.readTurnNumber()
@@ -119,6 +113,17 @@ func (s *Lexer) readTurnNumber() (tok Token) {
 		} else if ch == '.' {
 
 			break
+		} else if ch == '/' || ch == '-' {
+			//TODO: that is for parsing the result clause, it should be improved.
+			p, err := s.r.Peek(1)
+			if err != nil {
+				return Token{Name: ERROR, Val: "peek error", Pos: s.pos - len(buf.Bytes())}
+			}
+			if !isResultChar(rune(p[0])) {
+				break
+			}
+			buf.WriteRune(ch)
+
 		} else {
 			buf.WriteRune(ch)
 		}

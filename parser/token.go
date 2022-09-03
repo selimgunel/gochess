@@ -1,6 +1,10 @@
-package lexer
+package parser
 
-// Token represents a lexical token.
+// Token represents a single token in the input stream.
+// Name: mnemonic name (numeric).
+// Val: string value of the token from the original stream.
+// Pos: position - offset from beginning of stream.
+
 type Token struct {
 	Name TokenName
 	Val  string
