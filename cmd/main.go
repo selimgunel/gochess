@@ -1,18 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/narslan/pgn"
+	parser "github.com/narslan/pgn"
 )
 
 func main() {
 
-	f, err := os.Open("/home/nevroz/go/src/github.com/narslan/pgn/bali02.pgn")
+	f, err := os.Open("/home/nevroz/go/src/github.com/narslan/pgn/pgn/polgar.pgn")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	parser.Parse(f)
+	games := parser.Parse(f)
+	for _, v := range games {
+		fmt.Printf("%v\n", v.Moves)
+	}
 
 }

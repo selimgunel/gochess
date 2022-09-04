@@ -3,7 +3,6 @@ package parser
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"strings"
 )
@@ -17,16 +16,13 @@ const (
 const eof = -1
 
 var tokenNames = []string{
-	ERROR:               "ERROR",
-	EOF:                 "EOF",
-	TAG:                 "TAG",
-	LEFT_CURLY_BRACKET:  "LEFT_CURLY_BRACKET",
-	RIGHT_CURLY_BRACKET: "RIGHT_CURLY_BRACKET",
-	LEFT_ROUND_BRACKET:  "LEFT_ROUND_BRACKET",
-	RIGHT_ROUND_BRACKET: "RIGHT_ROUND_BRACKET",
-	NEWLINE:             "NEWLINE",
-	COMMENT:             "COMMENT",
-	MOVE:                "MOVE",
+	ERROR: "ERROR",
+	EOF:   "EOF",
+	TAG:   "TAG",
+
+	NEWLINE: "NEWLINE",
+	COMMENT: "COMMENT",
+	MOVE:    "MOVE",
 
 	NUMBER:      "NUMBER",
 	TURN_NUMBER: "TURN_NUMBER",
@@ -38,12 +34,6 @@ var tokenNames = []string{
 	CAPTURE:     "CAPTURE",
 	WS:          "WS",
 	RESULT:      "RESULT",
-}
-
-func (tok Token) String() string {
-	var s strings.Builder
-	fmt.Fprintf(&s, "Token{%s, '%s', %d}", tokenNames[tok.Name], tok.Val, tok.Pos)
-	return s.String()
 }
 
 type Lexer struct {
@@ -93,12 +83,39 @@ func (s *Lexer) Scan() (tok Token) {
 	case '{':
 		s.unread()
 		return s.readComment()
+	case '(':
+		s.unread()
+		return s.readRoundComment()
+	case '$':
+		s.unread()
+		return s.readPin()
+
 	default:
 		s.unread()
 		return s.readMove()
 
 	}
 
+}
+
+// readTurnNum
+func (s *Lexer) readPin() (tok Token) {
+	// Create a buffer and read the current character into it.
+
+	// Read every subsequent whitespace character into the buffer.
+	// Non-whitespace characters and EOF will cause the loop to exit.
+
+	s.r.Discard(1)
+	for {
+		if ch := s.read(); ch == eof {
+			panic("it shouldn't reach here")
+		} else if isDigit(ch) {
+			s.r.Discard(1)
+		} else {
+			break
+		}
+	}
+	return Token{}
 }
 
 // scanWhitespace consumes the current rune and all contiguous whitespace.
@@ -187,6 +204,30 @@ func (s *Lexer) readComment() (tok Token) {
 
 			break
 		} else if ch == '{' {
+			s.unread()
+			s.r.Discard(1)
+		} else {
+			buf.WriteRune(ch)
+		}
+	}
+
+	return Token{Name: COMMENT, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
+}
+
+func (s *Lexer) readRoundComment() (tok Token) {
+
+	// Create a buffer and read the current character into it.
+	var buf bytes.Buffer
+
+	// Read every subsequent whitespace character into the buffer.
+	// Non-whitespace characters and EOF will cause the loop to exit.
+	for {
+		if ch := s.read(); ch == eof {
+			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
+		} else if ch == ')' {
+
+			break
+		} else if ch == '(' {
 			s.unread()
 			s.r.Discard(1)
 		} else {

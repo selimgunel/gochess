@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"strings"
 )
@@ -16,12 +15,11 @@ const (
 
 type Tag [2]string
 type Game struct {
-	Tags   []*Tag
-	Moves  string
-	Result string
+	Tags  []Tag
+	Moves []string
 }
 
-func Parse(input io.Reader) {
+func Parse(input io.Reader) []Game {
 
 	scanner := bufio.NewScanner(input)
 	scanner.Split(crunchSplitFunc)
@@ -36,14 +34,20 @@ func Parse(input io.Reader) {
 		sa = append(sa, "["+t)
 	}
 
-	for _, g := range sa {
-		l := NewLexer(strings.NewReader(g))
+	games := make([]Game, 0)
+	for _, src := range sa {
+		l := NewLexer(strings.NewReader(src))
 
+		g := Game{
+			Tags:  make([]Tag, 0),
+			Moves: make([]string, 0),
+		}
+		cc := 0
 		for {
 
 			tok := l.Scan()
+
 			if tok.Name == EOF || tok.Name == ERROR {
-				fmt.Printf("tok: %d %s Pos: %d\n", tok.Name, tok.Val, tok.Pos)
 				break
 			}
 			if tok.Name == MOVE && tok.Val == "" {
@@ -55,34 +59,21 @@ func Parse(input io.Reader) {
 			if tok.Name == NEWLINE {
 				continue
 			}
-			fmt.Printf("%s\n", tok)
 
+			if tok.Name == MOVE && tok.Val != "" {
+
+				g.Moves = append(g.Moves, tok.Val)
+			}
+			cc++
 		}
+
+		games = append(games, g)
 	}
 
+	return games
 }
 
 //Tags
-
-func (t *Tag) String() string {
-	var sb strings.Builder
-
-	fmt.Fprintf(&sb, "%13s", t[0])
-	sb.WriteString(" => ")
-	fmt.Fprintf(&sb, "%s", t[1])
-	sb.WriteRune('\n')
-
-	return sb.String()
-}
-
-func (g Game) String() string {
-	var sb strings.Builder
-	for _, t := range g.Tags {
-		fmt.Fprintf(&sb, "%s", t)
-	}
-
-	return sb.String()
-}
 
 // IsEmpty: check if stack is empty
 func (g Game) IsEmpty() bool {
