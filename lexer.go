@@ -15,33 +15,12 @@ const (
 
 const eof = -1
 
-var tokenNames = []string{
-	ERROR: "ERROR",
-	EOF:   "EOF",
-	TAG:   "TAG",
-
-	NEWLINE: "NEWLINE",
-	COMMENT: "COMMENT",
-	MOVE:    "MOVE",
-
-	NUMBER:      "NUMBER",
-	TURN_NUMBER: "TURN_NUMBER",
-	DOT:         "DOT",
-	TREE_DOT:    "TREE_DOT",
-	RANK:        "RANK",
-	FILE:        "FILE",
-	CHECK:       "CHECK",
-	CAPTURE:     "CAPTURE",
-	WS:          "WS",
-	RESULT:      "RESULT",
-}
-
 type Lexer struct {
 	r   *bufio.Reader
 	pos int
 }
 
-// NewLexer returns a new instance of Scanner.
+// NewLexer returns a new instance of Lexer.
 func NewLexer(r io.Reader) *Lexer {
 	return &Lexer{r: bufio.NewReader(r),
 		pos: 0,
@@ -49,7 +28,7 @@ func NewLexer(r io.Reader) *Lexer {
 }
 
 // read reads the next rune from the bufferred reader.
-// Returns the rune(0) if an error occurs (or io.EOF is returned).
+// Returns the -1 if an error occurs.
 func (s *Lexer) read() rune {
 	ch, _, err := s.r.ReadRune()
 	if err != nil {
@@ -98,12 +77,8 @@ func (s *Lexer) Scan() (tok Token) {
 
 }
 
-// readTurnNum
+// readPin reads placeholders e.g $12 .
 func (s *Lexer) readPin() (tok Token) {
-	// Create a buffer and read the current character into it.
-
-	// Read every subsequent whitespace character into the buffer.
-	// Non-whitespace characters and EOF will cause the loop to exit.
 
 	s.r.Discard(1)
 	for {
@@ -118,7 +93,7 @@ func (s *Lexer) readPin() (tok Token) {
 	return Token{}
 }
 
-// scanWhitespace consumes the current rune and all contiguous whitespace.
+// readTurnNumber reads turn number.
 func (s *Lexer) readTurnNumber() (tok Token) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
@@ -131,7 +106,7 @@ func (s *Lexer) readTurnNumber() (tok Token) {
 
 			break
 		} else if ch == '/' || ch == '-' {
-			//TODO: that is for parsing the result clause, it should be improved.
+			//TODO: that is for parsing the result clause, it doesn't work now.
 			p, err := s.r.Peek(1)
 			if err != nil {
 				return Token{Name: ERROR, Val: "peek error", Pos: s.pos - len(buf.Bytes())}
@@ -148,7 +123,7 @@ func (s *Lexer) readTurnNumber() (tok Token) {
 	return Token{Name: TURN_NUMBER, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
 }
 
-// readTag consumes the current rune and all contiguous whitespace.
+// readMove consumes the current move.
 func (s *Lexer) readMove() (tok Token) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
@@ -163,13 +138,13 @@ func (s *Lexer) readMove() (tok Token) {
 		} else {
 			break
 		}
-
 	}
 
 	return Token{Name: MOVE, Val: buf.String(), Pos: s.pos - len(buf.Bytes())}
 
 }
 
+// readMove consumes the current tag.
 func (s *Lexer) readTag() (tok Token) {
 	var buf bytes.Buffer
 
@@ -192,11 +167,8 @@ func (s *Lexer) readTag() (tok Token) {
 
 func (s *Lexer) readComment() (tok Token) {
 
-	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 
-	// Read every subsequent whitespace character into the buffer.
-	// Non-whitespace characters and EOF will cause the loop to exit.
 	for {
 		if ch := s.read(); ch == eof {
 			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
@@ -216,11 +188,8 @@ func (s *Lexer) readComment() (tok Token) {
 
 func (s *Lexer) readRoundComment() (tok Token) {
 
-	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 
-	// Read every subsequent whitespace character into the buffer.
-	// Non-whitespace characters and EOF will cause the loop to exit.
 	for {
 		if ch := s.read(); ch == eof {
 			return Token{Name: ERROR, Val: "eof reached", Pos: s.pos}
@@ -241,9 +210,10 @@ func (s *Lexer) readRoundComment() (tok Token) {
 // isDigit returns true if the rune is a digit.
 func isDigit(ch rune) bool { return (ch >= '0' && ch <= '9') }
 
-// isDigit returns true if the rune is a digit.
+// isResultChar returns true if the rune is a valid result char. TODO: it is not useful now.
 func isResultChar(ch rune) bool { return strings.ContainsRune("12/-", ch) }
 
+// isMove returns true if the rune is a valid move character.
 func isMove(ch rune) bool {
 	return strings.ContainsRune("KNRQBabcdefgh0123456789O-+x!?", ch)
 }
