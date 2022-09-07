@@ -1,4 +1,4 @@
-package parser
+package pgn
 
 // Token represents a single token in the input stream.
 // Name: mnemonic name (numeric).
