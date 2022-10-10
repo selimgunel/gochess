@@ -68,7 +68,6 @@ func (s *Lexer) Scan() (tok Token) {
 	case '$':
 		s.unread()
 		return s.readPin()
-
 	default:
 		s.unread()
 		return s.readMove()
