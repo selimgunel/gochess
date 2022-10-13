@@ -1,7 +1,7 @@
 `pgn` is a PGN file parser written in `go`. 
 
 There is just one useful method, namely `pgn.Parse()`. 
-Caveat: The lexer skip over result annotations  . 
+Caveat: The lexer skips over result annotations  . 
 
 ```go
 package main
