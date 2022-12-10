@@ -1,7 +1,5 @@
 `pgn` is a PGN file parser written in `go`. 
 There is just one useful method, namely `pgn.Parse()`. 
- 
-
 ```go
 package main
 
