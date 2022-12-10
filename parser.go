@@ -28,7 +28,7 @@ func Split(input io.Reader) ([]Tag, []string, error) {
 
 	tags := make([]Tag, 0)
 	moves := make([]string, 0)
-	var moveCtx bool //whether the scanner is in tags or in moves
+	var moveCtx = false //whether the scanner is in tags or in moves
 	for s.Scan() {
 		l := s.Text()
 
@@ -39,7 +39,7 @@ func Split(input io.Reader) ([]Tag, []string, error) {
 				tag := Tag{}
 				i := strings.Index(l, " ")
 				tag[0] = l[1:i]
-				tag[1] = l[i:]
+				tag[1] = l[i : len(l)-1]
 				tags = append(tags, tag)
 			} else {
 				moveCtx = true
@@ -52,6 +52,7 @@ func Split(input io.Reader) ([]Tag, []string, error) {
 				moves = append(moves, "---")
 			}
 		}
+
 		ln++
 	}
 

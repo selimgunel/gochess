@@ -7,7 +7,7 @@ import (
 
 func TestParser(t *testing.T) {
 
-	f, err := os.Open("testdata/small.pgn")
+	f, err := os.Open("testdata/two.pgn")
 	checkErr(err, t)
 	tags, moves, err := Split(f)
 	checkErr(err, t)
@@ -17,6 +17,9 @@ func TestParser(t *testing.T) {
 	for _, v := range moves {
 		t.Logf("%v\n", v)
 	}
+
+	Parse(tags, moves)
+
 }
 
 func checkErr(err error, tb testing.TB) {
