@@ -17,6 +17,8 @@ func TestScanner_Scan(t *testing.T) {
 		// Special tokens (EOF, ILLEGAL, WS)
 		{s: ``, expectedName: lexer.EOF, expectedVal: ""},
 		{s: `[Event "?"]`, expectedName: lexer.TAG, expectedVal: `Event "?"`},
+		{s: `[White "?"]`, expectedName: lexer.TAG, expectedVal: `White "?"`},
+		{s: `[Black "?"]`, expectedName: lexer.TAG, expectedVal: `Black "?"`},
 		{s: `{}`, expectedName: lexer.COMMENT, expectedVal: ""},
 		{s: `1.`, expectedName: lexer.TURN_NUMBER, expectedVal: "1"},
 	}

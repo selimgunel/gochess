@@ -3,3 +3,4 @@ opening/
 data/
 go.mod
 go.sum
+testdata/

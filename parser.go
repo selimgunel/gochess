@@ -2,8 +2,8 @@ package pgn
 
 import (
 	"bufio"
+	"fmt"
 	"io"
-	"strings"
 )
 
 const (
@@ -19,58 +19,21 @@ type Game struct {
 	Moves []string
 }
 
-func Parse(input io.Reader) []Game {
+func Parse(input io.Reader) ([]Game, error) {
 
-	scanner := bufio.NewScanner(input)
-	scanner.Split(crunchSplitFunc)
+	g := make([]Game, 0)
+	s := bufio.NewScanner(input)
 
-	sa := make([]string, 0)
-
-	for scanner.Scan() {
-		t := scanner.Text()
-		if t == "" {
-			continue
+	s.Split(bufio.ScanLines)
+	ln := 1
+	for s.Scan() {
+		l := s.Text()
+		if l == "" {
+			fmt.Printf("line number: %d\n", ln)
 		}
-		sa = append(sa, "["+t)
+		ln++
 	}
-
-	games := make([]Game, 0)
-	for _, src := range sa {
-		l := NewLexer(strings.NewReader(src))
-
-		g := Game{
-			Tags:  make([]Tag, 0),
-			Moves: make([]string, 0),
-		}
-		cc := 0
-		for {
-
-			tok := l.Scan()
-
-			if tok.Name == EOF || tok.Name == ERROR {
-				break
-			}
-			if tok.Name == MOVE && tok.Val == "" {
-				continue
-			}
-			if tok.Name == COMMENT {
-				continue
-			}
-			if tok.Name == NEWLINE {
-				continue
-			}
-
-			if tok.Name == MOVE && tok.Val != "" {
-
-				g.Moves = append(g.Moves, tok.Val)
-			}
-			cc++
-		}
-
-		games = append(games, g)
-	}
-
-	return games
+	return g, nil
 }
 
 //Tags
@@ -78,21 +41,4 @@ func Parse(input io.Reader) []Game {
 // IsEmpty: check if stack is empty
 func (g Game) IsEmpty() bool {
 	return len(g.Tags) == 0
-}
-
-// Taken from: https://github.com/freeeve/pgn/issues/17.
-func crunchSplitFunc(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	if atEOF && len(data) == 0 {
-		return 0, nil, nil
-	}
-
-	if i := strings.Index(string(data), "[Event "); i >= 0 {
-		return i + 1, data[0:i], nil
-	}
-
-	if atEOF {
-		return len(data), data, nil
-	}
-
-	return
 }
