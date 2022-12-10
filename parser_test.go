@@ -9,13 +9,13 @@ func TestParser(t *testing.T) {
 
 	f, err := os.Open("testdata/small.pgn")
 	checkErr(err, t)
-	games, err := Parse(f)
+	tags, moves, err := Split(f)
 	checkErr(err, t)
-	for _, v := range games {
-		t.Logf("%v\n", v.Moves)
+	for _, v := range tags {
+		t.Logf("%v\n", v)
 	}
-	for _, v := range games {
-		t.Logf("%v\n", v.Tags)
+	for _, v := range moves {
+		t.Logf("%v\n", v)
 	}
 }
 

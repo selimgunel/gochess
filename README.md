@@ -71,3 +71,50 @@ func Parse(input io.Reader) ([]Game, error) {
 
 	return games, nil
 }```
+
+```go
+
+func Split(input io.Reader) ([]Tag, []string, error) {
+
+	s := bufio.NewScanner(input)
+
+	s.Split(bufio.ScanLines)
+	ln := 1
+
+	tags := make([]Tag, 0)
+	moves := make([]string, 0)
+	var moveCtx bool //whether the scanner is in tags or in moves
+	for s.Scan() {
+		l := s.Text()
+
+		if l != "" {
+
+			if strings.HasPrefix(l, "[") {
+				moveCtx = false
+				tag := Tag{}
+				i := strings.Index(l, " ")
+				tag[0] = l[1:i]
+				tag[1] = l[i:]
+				tags = append(tags, tag)
+			} else {
+				moveCtx = true
+				moves = append(moves, l)
+			}
+
+		} else {
+			if moveCtx {
+				tags = append(tags, Tag{})
+				moves = append(moves, "---")
+			}
+		}
+		ln++
+	}
+
+	
+	for _, v := range tags {
+		
+	}
+
+	return tags, moves, nil
+}
+```
