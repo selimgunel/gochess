@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestParser(t *testing.T) {
+func TestSplit(t *testing.T) {
 
 	f, err := os.Open("testdata/two.pgn")
 	checkErr(err, t)
@@ -19,6 +19,18 @@ func TestParser(t *testing.T) {
 	}
 
 	Parse(tags, moves)
+
+}
+
+func TestSplitPoint(t *testing.T) {
+
+	f, err := os.Open("testdata/two.pgn")
+	checkErr(err, t)
+	sps, err := SplitPoints(f)
+	checkErr(err, t)
+	for _, v := range sps {
+		t.Logf("%v\n", v)
+	}
 
 }
 

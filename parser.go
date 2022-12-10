@@ -59,35 +59,69 @@ func Split(input io.Reader) ([]Tag, []string, error) {
 	return tags, moves, nil
 }
 
-func Parse(tags []Tag, moves []string) (*Game, error) {
+func SplitPoints(input io.Reader) ([]int, error) {
 
-	src := strings.Join(moves, "\n")
-	l := NewLexer(strings.NewReader(src))
+	s := bufio.NewScanner(input)
 
-	g := &Game{
-		Tags:  make([]Tag, 0),
-		Moves: make([]string, 0),
-	}
-	g.Tags = tags
-L:
-	for {
+	s.Split(bufio.ScanLines)
+	ln := 1
 
-		tok := l.Scan()
+	splitPoints := make([]int, 0)
+	var moveCtx = false //whether the scanner is in tags or in moves
+	for s.Scan() {
+		l := s.Text()
 
-		switch tok.Name {
-		case EOF, ERROR:
-			break L
-		case MOVE:
-			if tok.Val != "" {
-				g.Moves = append(g.Moves, tok.Val)
+		if l != "" {
+
+			if strings.HasPrefix(l, "[") {
+				moveCtx = false
+			} else {
+				moveCtx = true
+
 			}
-		default:
-			continue
+
+		} else {
+			if moveCtx {
+				splitPoints = append(splitPoints, ln)
+			}
 		}
 
+		ln++
 	}
 
-	return g, nil
+	return splitPoints, nil
+}
+
+func Parse(input io.Reader, sps []int) (*Game, error) {
+
+	s := bufio.NewScanner(input)
+
+	s.Split(bufio.ScanLines)
+	ln := 1
+
+	splitPoints := make([]int, 0)
+	var moveCtx = false //whether the scanner is in tags or in moves
+	for s.Scan() {
+		l := s.Text()
+
+		if l != "" {
+
+			if strings.HasPrefix(l, "[") {
+				moveCtx = false
+			} else {
+				moveCtx = true
+
+			}
+
+		} else {
+			if moveCtx {
+				splitPoints = append(splitPoints, ln)
+			}
+		}
+
+		ln++
+	}
+
 }
 
 //Tags
