@@ -18,7 +18,7 @@ func TestSplit(t *testing.T) {
 		t.Logf("%v\n", v)
 	}
 
-	Parse(tags, moves)
+	//Parse(tags, moves)
 
 }
 
@@ -31,6 +31,12 @@ func TestSplitPoint(t *testing.T) {
 	for _, v := range sps {
 		t.Logf("%v\n", v)
 	}
+
+}
+
+func Testprocstr(t *testing.T) {
+
+	procstr("HELLO PEOPLE!", LOWER|REV|CAP)
 
 }
 
