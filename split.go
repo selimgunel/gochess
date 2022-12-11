@@ -2,7 +2,6 @@ package pgn
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -53,7 +52,7 @@ func Split(input io.Reader) ([]Tag, []string, error) {
 	return tags, moves, nil
 }
 
-// SplitPoints detects the line breaks in a pgn file and reports.
+// SplitPoints detects the line breaks in a pgn file and reports them.
 func SplitPoints(input io.Reader) ([]int, error) {
 
 	s := bufio.NewScanner(input)
@@ -108,8 +107,6 @@ func SplitAndSave(fileToBeChunked string) error {
 	// calculate total number of parts the file will be chunked into
 
 	totalPartsNum := uint64(math.Ceil(float64(fileSize) / float64(fileChunk)))
-
-	fmt.Printf("Splitting to %d pieces.\n", totalPartsNum)
 
 	for i := uint64(0); i < totalPartsNum; i++ {
 

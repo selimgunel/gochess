@@ -34,7 +34,15 @@ func TestSplitPoint(t *testing.T) {
 
 }
 
-func Testprocstr(t *testing.T) {
+// func TestSplitAndSave(t *testing.T) {
+
+// 	err := SplitAndSave("testdata/two.pgn")
+// 	checkErr(err, t)
+
+// }
+
+// TODO: that is for configuration with bits
+func TestProcstr(t *testing.T) {
 
 	procstr("HELLO PEOPLE!", LOWER|REV|CAP)
 
