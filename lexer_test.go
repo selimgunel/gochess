@@ -1,40 +1,71 @@
-package pgn_test
+package pgn
 
-import (
-	"strings"
-	"testing"
+import "testing"
 
-	lexer "github.com/narslan/pgn"
-)
+type lexTest struct {
+	name  string
+	input string
+	items []item
+}
 
-// Ensure the scanner can scan tokens correctly.
-func TestScanner_Scan(t *testing.T) {
-	var tests = []struct {
-		s            string
-		expectedName lexer.TokenName
-		expectedVal  string
-	}{
-		// Special tokens (EOF, ILLEGAL, WS)
-		{s: ``, expectedName: lexer.EOF, expectedVal: ""},
-		{s: `[Event "?"]`, expectedName: lexer.TAG, expectedVal: `Event "?"`},
-		{s: `[White "?"]`, expectedName: lexer.TAG, expectedVal: `White "?"`},
-		{s: `[Black "?"]`, expectedName: lexer.TAG, expectedVal: `Black "?"`},
-		{s: `{}`, expectedName: lexer.COMMENT, expectedVal: ""},
-		{s: `1.`, expectedName: lexer.TURN_NUMBER, expectedVal: "1"},
+func mkItem(typ itemType, text string) item {
+	return item{
+		typ: typ,
+		val: text,
 	}
 
-	for i, tt := range tests {
-		s := lexer.NewLexer(strings.NewReader(tt.s))
-		tok := s.Scan()
-		if tok.Name != tt.expectedName {
-			t.Errorf("%d. token mismatch: exp=%q got=%q", i, tt.expectedName, tok.Name)
+}
+
+var (
+	tEOF = mkItem(itemEOF, "")
+)
+
+var lexTests = []lexTest{
+	{"empty", "", []item{tEOF}},
+}
+
+// collect gathers the emitted items into a slice.
+func collect(t *lexTest) (items []item) {
+	l := lex(t.input)
+
+	for {
+		item := l.nextItem()
+		items = append(items, item)
+		if item.typ == itemEOF || item.typ == itemError {
+			break
 		}
-		if tok.Val != tt.expectedVal {
-			t.Errorf("%d. token fail: exp=%q got=%q", i, tt.s, tok.Val)
+	}
+	return
+}
+
+func TestLex(t *testing.T) {
+	for _, test := range lexTests {
+		items := collect(&test)
+		if !equal(items, test.items, false) {
+			t.Errorf("%s: got\n\t%+v\nexpected\n\t%v", test.name, items, test.items)
+			return // TODO
 		}
+		t.Log(test.name, "OK")
 	}
 }
 
-func TestScanner() {
-
+func equal(i1, i2 []item, checkPos bool) bool {
+	if len(i1) != len(i2) {
+		return false
+	}
+	for k := range i1 {
+		if i1[k].typ != i2[k].typ {
+			return false
+		}
+		if i1[k].val != i2[k].val {
+			return false
+		}
+		if checkPos && i1[k].pos != i2[k].pos {
+			return false
+		}
+		if checkPos && i1[k].line != i2[k].line {
+			return false
+		}
+	}
+	return true
 }

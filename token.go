@@ -1,5 +1,9 @@
 package pgn
 
+import (
+	"fmt"
+)
+
 // Token represents a single token in the input stream.
 // Name: mnemonic name (numeric).
 // Val: string value of the token from the original stream.
@@ -41,3 +45,18 @@ const (
 	CAPTURE //Qxd4
 
 )
+
+func (tok Token) String() string {
+	return fmt.Sprintf("Token{%s, '%s', %d}", tokenNames[tok.Name], tok.Val, tok.Pos)
+}
+
+func makeErrorToken(pos int) Token {
+	return Token{ERROR, "", pos}
+}
+
+var tokenNames = []string{
+	ERROR:   "ERROR",
+	EOF:     "EOF",
+	COMMENT: "COMMENT",
+	NUMBER:  "NUMBER",
+}
