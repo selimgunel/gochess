@@ -34,3 +34,7 @@ func TestScanner_Scan(t *testing.T) {
 		}
 	}
 }
+
+func TestScanner() {
+
+}
