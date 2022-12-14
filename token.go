@@ -27,9 +27,11 @@ const (
 	RIGHT_CURLY_BRACKET
 	LEFT_ROUND_BRACKET
 	RIGHT_ROUND_BRACKET
+	QUOTE
 	NEWLINE
 	COMMENT
 	NUMBER
+	IDENTIFIER
 	//Move tokens e4 cx5!
 	MOVE
 	//Move related tokens. 1.c4 or 8...d5

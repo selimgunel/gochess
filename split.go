@@ -3,7 +3,7 @@ package pgn
 import (
 	"bufio"
 	"io"
-	"io/ioutil"
+
 	"math"
 	"os"
 	"strconv"
@@ -117,14 +117,14 @@ func SplitAndSave(fileToBeChunked string) error {
 
 		// write to disk
 		fileName := "somebigfile_" + strconv.FormatUint(i, 10)
-		_, err := os.Create(fileName)
+		fd, err := os.Create(fileName)
 
 		if err != nil {
 			return err
 		}
 
 		// write/save buffer to disk
-		err = ioutil.WriteFile(fileName, partBuffer, os.ModeAppend)
+		_, err = fd.Write(partBuffer)
 
 		if err != nil {
 			return err
