@@ -20,15 +20,29 @@ var (
 
 	tTag      = mkItem(TAG, `Event "test"`)
 	tTagOther = mkItem(TAG, `AnotherEvent "test"`)
+	tNumber   = mkItem(NUMBER, `1`)
+	tDot      = mkItem(DOT, `.`)
+	ttreeDot  = mkItem(TREE_DOT, `...`)
+	tMove     = mkItem(MOVE, `Nb5`)
 )
 
 var twoLineTags string = `[Event "test"]
 [AnotherEvent "test"]
 `
+
+var twoLineTagsNumber string = `[Event "test"]
+[AnotherEvent "test"] 1
+`
+
 var lexTests = []lexTest{
 	{"empty", "", []Token{tEOF}},
 	{"tag", `[Event "test"]`, []Token{tTag, tEOF}},
 	{"multiline", twoLineTags, []Token{tTag, tTagOther, tEOF}},
+	{"multiline number", twoLineTagsNumber, []Token{tTag, tTagOther, tNumber, tEOF}},
+	{"multiline number with dot", twoLineTagsNumber + ".", []Token{tTag, tTagOther, tNumber, tDot, tEOF}},
+	{"multiline number with tree dot", twoLineTagsNumber + " ...", []Token{tTag, tTagOther, tNumber, ttreeDot, tEOF}},
+
+	{"read move", twoLineTags + " 1. Nb5", []Token{tTag, tTagOther, tNumber, tDot, tMove, tEOF}},
 }
 
 // collect gathers the emitted items into a slice.

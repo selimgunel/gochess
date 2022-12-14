@@ -31,7 +31,7 @@ const (
 	NEWLINE
 	COMMENT
 	NUMBER
-	IDENTIFIER
+
 	//Move tokens e4 cx5!
 	MOVE
 	//Move related tokens. 1.c4 or 8...d5
@@ -57,9 +57,12 @@ func makeErrorToken(pos int) Token {
 }
 
 var tokenNames = []string{
-	ERROR:   "ERROR",
-	EOF:     "EOF",
-	COMMENT: "COMMENT",
-	NUMBER:  "NUMBER",
-	TAG:     "TAG",
+	ERROR:    "ERROR",
+	EOF:      "EOF",
+	COMMENT:  "COMMENT",
+	NUMBER:   "NUMBER",
+	TAG:      "TAG",
+	DOT:      "DOT",
+	TREE_DOT: "TREE_DOT",
+	MOVE:     "MOVE",
 }

@@ -1,6 +1,7 @@
 package pgn
 
 import (
+	"strings"
 	"unicode/utf8"
 )
 
@@ -60,9 +61,42 @@ func (lex *Lexer) NextToken() Token {
 	if lex.r == '[' {
 		lex.next()
 		return lex.scanTag()
+	} else if isDigit(lex.r) {
+		return lex.scanNumber()
+	} else if lex.r == '.' {
+		return lex.scanDot()
+	} else if isMove(lex.r) {
+		return lex.scanMove()
+	} else if lex.r == '{' {
+		return lex.scanComment()
 	}
 
 	return makeErrorToken(lex.rpos)
+}
+
+func (lex *Lexer) scanDot() Token {
+
+	startpos := lex.rpos
+
+	if lex.peekNextByte() == '.' && lex.peekTwoNextByte() == '.' {
+		lex.next()
+		lex.next()
+		lex.next()
+		return Token{TREE_DOT, lex.buf[startpos:lex.rpos], startpos}
+	}
+	lex.next()
+	return Token{DOT, lex.buf[startpos:lex.rpos], startpos}
+
+}
+
+func (lex *Lexer) scanMove() Token {
+	startpos := lex.rpos
+
+	for isMove(lex.r) {
+		lex.next()
+	}
+
+	return Token{MOVE, lex.buf[startpos:lex.rpos], startpos}
 }
 
 func (lex *Lexer) scanTag() Token {
@@ -86,18 +120,18 @@ func (lex *Lexer) peekNextByte() rune {
 	}
 }
 
+func (lex *Lexer) peekTwoNextByte() rune {
+	if lex.nextpos < len(lex.buf) {
+		return rune(lex.buf[lex.nextpos+1])
+	} else {
+		return -1
+	}
+}
+
 func (lex *Lexer) skipNontokens() {
 	for lex.r == ' ' || lex.r == '\t' || lex.r == '\n' || lex.r == '\r' {
 		lex.next()
 	}
-}
-
-func (lex *Lexer) scanIdentifier() Token {
-	startpos := lex.rpos
-	for isAlpha(lex.r) || isDigit(lex.r) {
-		lex.next()
-	}
-	return Token{IDENTIFIER, lex.buf[startpos:lex.rpos], startpos}
 }
 
 func (lex *Lexer) scanNumber() Token {
@@ -126,7 +160,7 @@ func (lex *Lexer) scanQuote() Token {
 func (lex *Lexer) scanComment() Token {
 	startpos := lex.rpos
 	lex.next()
-	for lex.r > 0 && lex.r != '\n' {
+	for lex.r == '}' {
 		lex.next()
 	}
 
@@ -137,6 +171,10 @@ func (lex *Lexer) scanComment() Token {
 
 func isAlpha(r rune) bool {
 	return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r == '_' || r == '$'
+}
+
+func isMove(r rune) bool {
+	return strings.ContainsRune("KNRQBabcdefgh0123456789O-+x!?", r)
 }
 
 func isDigit(r rune) bool {
