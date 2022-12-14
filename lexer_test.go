@@ -1,6 +1,7 @@
 package pgn
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -107,7 +108,20 @@ func TestLexFile(t *testing.T) {
 
 	}
 
-	for _, v := range toks {
-		t.Log(v)
+}
+
+func TestMoves(t *testing.T) {
+
+	//f, err := os.ReadFile("testdata/s1.pgn")
+	f, err := os.ReadFile("pgn/counter-vs-zahak.pgn")
+	checkErr(err, t)
+	moves := Moves(string(f))
+
+	for i, v := range moves {
+		if i%2 == 0 {
+			fmt.Printf("%d. ", i/2+1)
+		}
+		fmt.Printf("%s ", v)
 	}
+
 }

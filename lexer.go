@@ -1,7 +1,6 @@
 package pgn
 
 import (
-	"fmt"
 	"strings"
 	"unicode/utf8"
 )
@@ -141,7 +140,7 @@ func (lex *Lexer) scanNumber() Token {
 	if lex.r == '0' || lex.r == '1' {
 
 		b := lex.peekNextByte()
-		fmt.Println("result part")
+
 		if b == '-' || b == '/' {
 			for isResult(lex.r) {
 				lex.next()
