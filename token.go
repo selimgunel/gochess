@@ -61,4 +61,5 @@ var tokenNames = []string{
 	EOF:     "EOF",
 	COMMENT: "COMMENT",
 	NUMBER:  "NUMBER",
+	TAG:     "TAG",
 }

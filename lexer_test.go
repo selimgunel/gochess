@@ -13,19 +13,27 @@ func mkItem(name TokenName, val string) Token {
 		Name: name,
 		Val:  val,
 	}
-
 }
 
 var (
 	tEOF = mkItem(EOF, "")
+
+	tTag      = mkItem(TAG, `Event "test"`)
+	tTagOther = mkItem(TAG, `AnotherEvent "test"`)
 )
 
+var twoLineTags string = `[Event "test"]
+[AnotherEvent "test"]
+`
 var lexTests = []lexTest{
 	{"empty", "", []Token{tEOF}},
+	{"tag", `[Event "test"]`, []Token{tTag, tEOF}},
+	{"multiline", twoLineTags, []Token{tTag, tTagOther, tEOF}},
 }
 
 // collect gathers the emitted items into a slice.
-func collect(t *lexTest) (items []Token) {
+func collect(t *lexTest, tb testing.TB) (items []Token) {
+
 	lex := NewLexer(t.input)
 	var toks []Token
 
@@ -35,13 +43,15 @@ func collect(t *lexTest) (items []Token) {
 		if tok.Name == EOF {
 			break
 		}
+
 	}
 	return toks
 }
 
 func TestLex(t *testing.T) {
 	for _, test := range lexTests {
-		items := collect(&test)
+		t.Log(test.name, "collecting")
+		items := collect(&test, t)
 		if !equal(items, test.tokens) {
 			t.Errorf("%s: got\n\t%+v\nexpected\n\t%v", test.name, items, test.tokens)
 
@@ -55,9 +65,6 @@ func equal(i1, i2 []Token) bool {
 		return false
 	}
 	for k := range i1 {
-		if i1[k].Pos != i2[k].Pos {
-			return false
-		}
 		if i1[k].Val != i2[k].Val {
 			return false
 		}

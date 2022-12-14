@@ -1,6 +1,8 @@
 package pgn
 
-import "unicode/utf8"
+import (
+	"unicode/utf8"
+)
 
 // Lexer
 //
@@ -29,6 +31,25 @@ func NewLexer(buf string) *Lexer {
 	return &lex
 }
 
+// next advances the lexer's internal state to point to the next rune in the
+// input.
+func (lex *Lexer) next() {
+	if lex.nextpos < len(lex.buf) {
+		lex.rpos = lex.nextpos
+		r, w := rune(lex.buf[lex.nextpos]), 1
+
+		if r >= utf8.RuneSelf {
+			r, w = utf8.DecodeRuneInString(lex.buf[lex.nextpos:])
+		}
+
+		lex.nextpos += w
+		lex.r = r
+	} else {
+		lex.rpos = len(lex.buf)
+		lex.r = -1 // EOF
+	}
+}
+
 func (lex *Lexer) NextToken() Token {
 	// Skip non-tokens like whitespace and check for EOF.
 	lex.skipNontokens()
@@ -36,31 +57,8 @@ func (lex *Lexer) NextToken() Token {
 		return Token{EOF, "", lex.nextpos}
 	}
 
-	// Is this an operator?
-	// if int(lex.r) < len(opTable) {
-	// 	if opName := opTable[lex.r]; opName != ERROR {
-	// 		if opName == DIVIDE {
-	// 			// Special case: '/' may be the start of a comment.
-	// 			if lex.peekNextByte() == '/' {
-	// 				return lex.scanComment()
-	// 			}
-	// 		}
-	// 		startpos := lex.rpos
-	// 		lex.next()
-	// 		return Token{opName, string(lex.buf[startpos:lex.rpos]), startpos}
-	// 	}
-	// }
-
-	// Not an operator. Try other types of tokens.
-	// if isAlpha(lex.r) {
-	// 	return lex.scanIdentifier()
-	// } else if isDigit(lex.r) {
-	// 	return lex.scanNumber()
-	// } else if lex.r == '"' {
-	// 	return lex.scanQuote()
-	// }
-
 	if lex.r == '[' {
+		lex.next()
 		return lex.scanTag()
 	}
 
@@ -69,9 +67,11 @@ func (lex *Lexer) NextToken() Token {
 
 func (lex *Lexer) scanTag() Token {
 	startpos := lex.rpos
-	for lex.r == ']' {
+
+	for lex.r != ']' {
 		lex.next()
 	}
+	defer lex.next()
 	return Token{TAG, lex.buf[startpos:lex.rpos], startpos}
 }
 
@@ -141,23 +141,4 @@ func isAlpha(r rune) bool {
 
 func isDigit(r rune) bool {
 	return '0' <= r && r <= '9'
-}
-
-// next advances the lexer's internal state to point to the next rune in the
-// input.
-func (lex *Lexer) next() {
-	if lex.nextpos < len(lex.buf) {
-		lex.rpos = lex.nextpos
-		r, w := rune(lex.buf[lex.nextpos]), 1
-
-		if r >= utf8.RuneSelf {
-			r, w = utf8.DecodeRuneInString(lex.buf[lex.nextpos:])
-		}
-
-		lex.nextpos += w
-		lex.r = r
-	} else {
-		lex.rpos = len(lex.buf)
-		lex.r = -1 // EOF
-	}
 }
