@@ -1,6 +1,9 @@
 package pgn
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 type lexTest struct {
 	name   string
@@ -85,4 +88,26 @@ func equal(i1, i2 []Token) bool {
 
 	}
 	return true
+}
+func TestLexFile(t *testing.T) {
+
+	//f, err := os.ReadFile("testdata/s1.pgn")
+	f, err := os.ReadFile("pgn/counter-vs-zahak.pgn")
+	checkErr(err, t)
+	lex := NewLexer(string(f))
+	var toks []Token
+
+	for {
+		tok := lex.NextToken()
+
+		toks = append(toks, tok)
+		if tok.Name == EOF {
+			break
+		}
+
+	}
+
+	for _, v := range toks {
+		t.Log(v)
+	}
 }

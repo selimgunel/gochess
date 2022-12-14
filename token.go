@@ -65,4 +65,5 @@ var tokenNames = []string{
 	DOT:      "DOT",
 	TREE_DOT: "TREE_DOT",
 	MOVE:     "MOVE",
+	RESULT:   "RESULT",
 }

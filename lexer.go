@@ -1,6 +1,7 @@
 package pgn
 
 import (
+	"fmt"
 	"strings"
 	"unicode/utf8"
 )
@@ -136,41 +137,39 @@ func (lex *Lexer) skipNontokens() {
 
 func (lex *Lexer) scanNumber() Token {
 	startpos := lex.rpos
+
+	if lex.r == '0' || lex.r == '1' {
+
+		b := lex.peekNextByte()
+		fmt.Println("result part")
+		if b == '-' || b == '/' {
+			for isResult(lex.r) {
+				lex.next()
+			}
+			return Token{RESULT, lex.buf[startpos:lex.rpos], startpos}
+		}
+	}
+
 	for isDigit(lex.r) {
 		lex.next()
 	}
 	return Token{NUMBER, lex.buf[startpos:lex.rpos], startpos}
 }
 
-func (lex *Lexer) scanQuote() Token {
-	startpos := lex.rpos
-	lex.next()
-	for lex.r > 0 && lex.r != '"' {
-		lex.next()
-	}
+func isResult(r rune) bool {
 
-	if lex.r < 0 {
-		return makeErrorToken(startpos)
-	} else {
-		lex.next()
-		return Token{QUOTE, string(lex.buf[startpos:lex.rpos]), startpos}
-	}
+	return strings.ContainsRune("12/0-", r)
 }
-
 func (lex *Lexer) scanComment() Token {
 	startpos := lex.rpos
 	lex.next()
-	for lex.r == '}' {
+	for lex.r != '}' {
 		lex.next()
 	}
 
 	tok := Token{COMMENT, string(lex.buf[startpos:lex.rpos]), startpos}
 	lex.next()
 	return tok
-}
-
-func isAlpha(r rune) bool {
-	return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r == '_' || r == '$'
 }
 
 func isMove(r rune) bool {
