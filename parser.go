@@ -1,7 +1,7 @@
 package pgn
 
 // Moves prints out moves.
-func Moves(pgnsource string) []string {
+func Parse(pgnsource string) (moves []string, tags []string) {
 
 	lex := NewLexer(pgnsource)
 	var toks []Token
@@ -15,12 +15,15 @@ func Moves(pgnsource string) []string {
 		}
 
 	}
-	tokens := make([]string, 0)
+
 	for _, v := range toks {
 		if v.Name == MOVE {
-			tokens = append(tokens, v.Val)
+			moves = append(moves, v.Val)
 		}
 
+		if v.Name == TAG {
+			tags = append(tags, v.Val)
+		}
 	}
-	return tokens
+	return moves, tags
 }

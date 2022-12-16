@@ -3,6 +3,7 @@ package pgn
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -90,38 +91,28 @@ func equal(i1, i2 []Token) bool {
 	}
 	return true
 }
-func TestLexFile(t *testing.T) {
+
+func TestParse(t *testing.T) {
 
 	//f, err := os.ReadFile("testdata/s1.pgn")
 	f, err := os.ReadFile("pgn/counter-vs-zahak.pgn")
 	checkErr(err, t)
-	lex := NewLexer(string(f))
-	var toks []Token
+	moves, _ := Parse(string(f))
 
-	for {
-		tok := lex.NextToken()
-
-		toks = append(toks, tok)
-		if tok.Name == EOF {
-			break
-		}
-
-	}
-
-}
-
-func TestMoves(t *testing.T) {
-
-	//f, err := os.ReadFile("testdata/s1.pgn")
-	f, err := os.ReadFile("pgn/counter-vs-zahak.pgn")
-	checkErr(err, t)
-	moves := Moves(string(f))
+	var b strings.Builder
 
 	for i, v := range moves {
 		if i%2 == 0 {
-			fmt.Printf("%d. ", i/2+1)
+			fmt.Fprintf(&b, "%d. ", i/2+1)
 		}
-		fmt.Printf("%s ", v)
+		fmt.Fprintf(&b, "%s ", v)
 	}
+	t.Log(b.String())
+}
 
+func checkErr(err error, tb testing.TB) {
+	tb.Helper()
+	if err != nil {
+		tb.Fatal(err)
+	}
 }
