@@ -34,24 +34,24 @@ func NewPiece(typ PieceType, color Color) Piece {
 func (p PieceType) String() string {
 	switch p {
 	case King:
-		return "k"
+		return "King"
 	case Queen:
-		return "q"
+		return "Queen"
 	case Rook:
-		return "r"
+		return "Rook"
 	case Bishop:
-		return "b"
+		return "Bishop"
 	case Knight:
-		return "n"
+		return "Knight"
 	case Pawn:
-		return "p"
+		return "Pawn"
 	default:
 		return ""
 	}
 }
 
-func (p Piece) Side() string {
-	if p.Color {
+func (c Color) String() string {
+	if c {
 		return "w"
 	}
 	return "b"
