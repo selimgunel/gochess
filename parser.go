@@ -1,5 +1,8 @@
 package pgn
 
+type Move struct {
+}
+
 // Moves prints out moves.
 func Parse(pgnsource string) (moves []string, tags []string) {
 

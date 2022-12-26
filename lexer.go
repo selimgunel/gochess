@@ -5,8 +5,6 @@ import (
 	"unicode/utf8"
 )
 
-// Lexer
-//
 // Create a new lexer with NewLexer and then call NextToken repeatedly to get
 // tokens from the stream. The lexer will return a token with the name EOF when
 // done.
