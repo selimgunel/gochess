@@ -107,9 +107,9 @@ func equal(i1, i2 []Token) bool {
 
 // }
 
-func checkErr(err error, tb testing.TB) {
-	tb.Helper()
-	if err != nil {
-		tb.Fatal(err)
-	}
-}
+// func checkErr(err error, tb testing.TB) {
+// 	tb.Helper()
+// 	if err != nil {
+// 		tb.Fatal(err)
+// 	}
+// }
