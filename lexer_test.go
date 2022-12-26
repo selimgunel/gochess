@@ -1,9 +1,6 @@
 package pgn
 
 import (
-	"fmt"
-	"os"
-	"strings"
 	"testing"
 )
 
@@ -75,7 +72,7 @@ func TestLex(t *testing.T) {
 			t.Errorf("%s: got\n\t%+v\nexpected\n\t%v", test.name, items, test.tokens)
 
 		}
-		t.Log(test.name, "OK")
+
 	}
 }
 
@@ -92,23 +89,23 @@ func equal(i1, i2 []Token) bool {
 	return true
 }
 
-func TestParse(t *testing.T) {
+// func TestParse(t *testing.T) {
 
-	//f, err := os.ReadFile("testdata/s1.pgn")
-	f, err := os.ReadFile("pgn/counter-vs-zahak.pgn")
-	checkErr(err, t)
-	moves, _ := Parse(string(f))
+// 	//f, err := os.ReadFile("testdata/s1.pgn")
+// 	f, err := os.ReadFile("pgn/counter-vs-zahak.pgn")
+// 	checkErr(err, t)
+// 	moves, _ := Parse(string(f))
 
-	var b strings.Builder
+// 	var b strings.Builder
 
-	for i, v := range moves {
-		if i%2 == 0 {
-			fmt.Fprintf(&b, "%d. ", i/2+1)
-		}
-		fmt.Fprintf(&b, "%s ", v)
-	}
-	t.Log(b.String())
-}
+// 	for i, v := range moves {
+// 		if i%2 == 0 {
+// 			fmt.Fprintf(&b, "%d. ", i/2+1)
+// 		}
+// 		fmt.Fprintf(&b, "%s ", v)
+// 	}
+
+// }
 
 func checkErr(err error, tb testing.TB) {
 	tb.Helper()

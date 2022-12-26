@@ -30,8 +30,7 @@ func (bb Bitboard) Get() uint64 {
 	return uint64(bb)
 }
 
-// // String returns a 64 character string of 1s and 0s starting with the most significant bit.
-// func (bb Bitboard) StringNe() string {
-// 	s := strconv.FormatUint(uint64(bb), 2)
-// 	return strings.Repeat("0", numOfSquaresInBoard-len(s)) + s
-// }
+// TODO: This will change, I opt to write a new implementation, this is borrowed from notnil/chess
+func (bb Bitboard) Occupied(sq int8) bool {
+	return (bits.RotateLeft64(uint64(bb), int(sq)) & 1) == 1
+}
