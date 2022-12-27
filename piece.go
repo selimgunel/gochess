@@ -56,3 +56,31 @@ func (c Color) String() string {
 	}
 	return "b"
 }
+
+func AllPieces() []Piece {
+
+	// whiteKing := Piece{King, true}
+	// whiteQueen := Piece{Queen, true}
+	// whiteRook := Piece{Rook, true}
+	// whiteBishop := Piece{Bishop, true}
+	// whiteKnight := Piece{Knight, true}
+	// whitePawn := Piece{Knight, true}
+
+	// blackKing := Piece{King, false}
+	// blackQueen := Piece{Queen, false}
+	// blackRook := Piece{Rook, false}
+	// blackBishop := Piece{Bishop, false}
+	// blackKnight := Piece{Knight, false}
+	// blackPawn := Piece{Knight, false}
+	colors := []Color{true, false}
+	pieces := make([]Piece, 12)
+	pt := []PieceType{King, Queen, Rook, Bishop, Pawn}
+	for _, c := range colors {
+		for _, t := range pt {
+			np := NewPiece(t, c)
+			pieces = append(pieces, np)
+		}
+	}
+
+	return pieces
+}

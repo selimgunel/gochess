@@ -6,9 +6,26 @@ import (
 	"strings"
 )
 
+const eight = 8
 const sixtyFour = 64
 
 type Bitboard uint64
+
+func newBitboard(m map[Square]bool) Bitboard {
+	s := ""
+	for sq := 0; sq < sixtyFour; sq++ {
+		if m[Square(sq)] {
+			s += "1"
+		} else {
+			s += "0"
+		}
+	}
+	bb, err := strconv.ParseUint(s, 2, 64)
+	if err != nil {
+		panic(err)
+	}
+	return Bitboard(bb)
+}
 
 func (bb Bitboard) String() string {
 	s := strconv.FormatUint(uint64(bb), 2)
@@ -31,6 +48,6 @@ func (bb Bitboard) Get() uint64 {
 }
 
 // TODO: This will change, I opt to write a new implementation, this is borrowed from notnil/chess
-func (bb Bitboard) Occupied(sq int8) bool {
+func (bb Bitboard) Occupied(sq Square) bool {
 	return (bits.RotateLeft64(uint64(bb), int(sq)) & 1) == 1
 }

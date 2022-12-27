@@ -66,7 +66,7 @@ func TestReverse(t *testing.T) {
 func TestOccupied(t *testing.T) {
 	testCases := []struct {
 		number     uint64 //the number which we want to have a bit representation
-		index      int8   //the position within the bit representation
+		index      Square //the position within the bit representation
 		isOccupied bool   //whether the bit is 1
 	}{
 		{

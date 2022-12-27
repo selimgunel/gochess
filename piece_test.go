@@ -24,8 +24,8 @@ func TestPieceString(t *testing.T) {
 }
 
 func TestNewPiece(t *testing.T) {
-	pieces := []struct {
-		piece     PieceType
+	testPieces := []struct {
+		pieceType PieceType
 		color     Color
 		pieceName string
 		colorName string
@@ -44,17 +44,13 @@ func TestNewPiece(t *testing.T) {
 		{Pawn, false, "Pawn", "b"},
 	}
 
-	//test for colors.
-	for _, piece := range pieces {
-		if piece.color.String() != piece.colorName {
-			t.Errorf("String version of color was incorrect.")
-		}
-	}
 	// test for piece type.
-	for _, piece := range pieces {
-		pName := piece.piece.String()
-		if pName != piece.pieceName {
-			t.Errorf("String version of piece was incorrect.  [want]%s [got]: %s", pName, piece.pieceName)
+	for _, testPiece := range testPieces {
+
+		piece := NewPiece(testPiece.pieceType, testPiece.color)
+
+		if testPiece.pieceType.String() != piece.PieceType.String() {
+			t.Errorf("String version of piece was incorrect.  [want]%s [got]: %s", piece.PieceType, testPiece.pieceType)
 		}
 	}
 }
