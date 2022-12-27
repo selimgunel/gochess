@@ -6,8 +6,9 @@ type PieceType int8
 type Color bool
 
 const (
+	NoPiece PieceType = iota
 	// King represents a king
-	King PieceType = iota
+	King
 	// Queen represents a queen
 	Queen
 	// Rook represents a rook
@@ -45,6 +46,43 @@ func (p PieceType) String() string {
 		return "Knight"
 	case Pawn:
 		return "Pawn"
+	default:
+		return ""
+	}
+}
+
+func (p Piece) String() string {
+	switch p.PieceType {
+	case King:
+		if p.Color {
+			return "K"
+		}
+		return "k"
+	case Queen:
+		if p.Color {
+			return "Q"
+		}
+		return "q"
+	case Rook:
+		if p.Color {
+			return "R"
+		}
+		return "r"
+	case Bishop:
+		if p.Color {
+			return "B"
+		}
+		return "b"
+	case Knight:
+		if p.Color {
+			return "N"
+		}
+		return "n"
+	case Pawn:
+		if p.Color {
+			return "P"
+		}
+		return "p"
 	default:
 		return ""
 	}
