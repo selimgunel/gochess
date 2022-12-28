@@ -40,7 +40,6 @@ func (b *Board) Draw() string {
 			if p.PieceType == NoPiece {
 				s += "-"
 			} else {
-				fmt.Printf("%s %s %s %s %d %d\n", p.Figure(), p.String(), p.Color, p.PieceType, File(f), Rank(r))
 				s += p.Figure()
 			}
 			s += " "
@@ -82,7 +81,6 @@ func (b *Board) PieceAt(sq Square) Piece {
 		}
 	}
 
-	// It is not black? then it is white
 	if b.whitePawn&mask != 0 {
 		return NewPiece(Pawn, true)
 	} else if b.whiteKnight&mask != 0 {

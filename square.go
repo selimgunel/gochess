@@ -1,3 +1,4 @@
+// this file is taken from amanjpro/zahak
 package gochess
 
 import (
