@@ -6,7 +6,6 @@ import (
 	"strings"
 )
 
-// A Board represents a chess board and includes pieces.
 // A Board represents a chess board and its relationship between squares and pieces.
 type Board struct {
 	bbWhiteKing   Bitboard
@@ -88,7 +87,6 @@ func (b *Board) setBBForPiece(p Piece, bb Bitboard) {
 		fmt.Println("no piece", p)
 
 	default:
-		fmt.Println(p)
 		panic("invalid piece")
 	}
 }
