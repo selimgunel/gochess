@@ -160,18 +160,3 @@ func (c Color) String() string {
 	}
 	return "b"
 }
-
-func AllPieces() []Piece {
-
-	colors := []Color{true, false}
-	pieces := make([]Piece, 12)
-	pt := []PieceType{King, Queen, Rook, Bishop, Pawn}
-	for _, c := range colors {
-		for _, t := range pt {
-			np := NewPiece(t, c)
-			pieces = append(pieces, np)
-		}
-	}
-
-	return pieces
-}

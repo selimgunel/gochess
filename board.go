@@ -86,7 +86,7 @@ func (b *Board) PieceAt(sq Square) Piece {
 	if b.whitePawn&mask != 0 {
 		return NewPiece(Pawn, true)
 	} else if b.whiteKnight&mask != 0 {
-		return NewPiece(King, true)
+		return NewPiece(Knight, true)
 	} else if b.whiteBishop&mask != 0 {
 		return NewPiece(Bishop, true)
 	} else if b.whiteRook&mask != 0 {
