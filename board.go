@@ -112,18 +112,16 @@ func (b *Board) bbForPiece(p Piece) Bitboard {
 
 // Draw returns visual representation of the board useful for debugging.
 func (b *Board) Draw() string {
-	//	whiteFigures := []string{"♙", "♘", "♗", "♖", "♕", "♔"}
-	//	blackFigures := []string{"♟", "♞", "♝", "♜", "♛", "♚"}
 
 	s := "\n A B C D E F G H\n"
 	for r := 7; r >= 0; r-- {
-		s += fmt.Sprint(Rank(r + 1))
-		for f := 0; f < len(Files); f++ {
+		s += fmt.Sprint(Rank(r))
+		for f := 0; f < len(Files)-1; f++ {
 			p := b.PieceAt(SquareOf(File(f), Rank(r)))
 			if p.PieceType == NoPiece {
 				s += "-"
 			} else {
-				s += "+"
+				s += p.Figure()
 			}
 			s += " "
 		}
@@ -328,32 +326,23 @@ func StartingBoard() Board {
 	bitboard.UpdateSquare(G7, NewPiece(Pawn, false), noPiece)
 	bitboard.UpdateSquare(H7, NewPiece(Pawn, false), noPiece)
 
-	// bitboard.UpdateSquare(A7, BlackPawn, NoPiece)
-	// bitboard.UpdateSquare(B7, BlackPawn, NoPiece)
-	// bitboard.UpdateSquare(C7, BlackPawn, NoPiece)
-	// bitboard.UpdateSquare(D7, BlackPawn, NoPiece)
-	// bitboard.UpdateSquare(E7, BlackPawn, NoPiece)
-	// bitboard.UpdateSquare(F7, BlackPawn, NoPiece)
-	// bitboard.UpdateSquare(G7, BlackPawn, NoPiece)
-	// bitboard.UpdateSquare(H7, BlackPawn, NoPiece)
+	bitboard.UpdateSquare(A1, NewPiece(Rook, true), noPiece)
+	bitboard.UpdateSquare(B1, NewPiece(Knight, true), noPiece)
+	bitboard.UpdateSquare(C1, NewPiece(Bishop, true), noPiece)
+	bitboard.UpdateSquare(D1, NewPiece(Queen, true), noPiece)
+	bitboard.UpdateSquare(E1, NewPiece(King, true), noPiece)
+	bitboard.UpdateSquare(F1, NewPiece(Bishop, true), noPiece)
+	bitboard.UpdateSquare(G1, NewPiece(Knight, true), noPiece)
+	bitboard.UpdateSquare(H1, NewPiece(Rook, true), noPiece)
 
-	// bitboard.UpdateSquare(A1, WhiteRook, NoPiece)
-	// bitboard.UpdateSquare(B1, WhiteKnight, NoPiece)
-	// bitboard.UpdateSquare(C1, WhiteBishop, NoPiece)
-	// bitboard.UpdateSquare(D1, WhiteQueen, NoPiece)
-	// bitboard.UpdateSquare(E1, WhiteKing, NoPiece)
-	// bitboard.UpdateSquare(F1, WhiteBishop, NoPiece)
-	// bitboard.UpdateSquare(G1, WhiteKnight, NoPiece)
-	// bitboard.UpdateSquare(H1, WhiteRook, NoPiece)
-
-	// bitboard.UpdateSquare(A8, BlackRook, NoPiece)
-	// bitboard.UpdateSquare(B8, BlackKnight, NoPiece)
-	// bitboard.UpdateSquare(C8, BlackBishop, NoPiece)
-	// bitboard.UpdateSquare(D8, BlackQueen, NoPiece)
-	// bitboard.UpdateSquare(E8, BlackKing, NoPiece)
-	// bitboard.UpdateSquare(F8, BlackBishop, NoPiece)
-	// bitboard.UpdateSquare(G8, BlackKnight, NoPiece)
-	// bitboard.UpdateSquare(H8, BlackRook, NoPiece)
+	bitboard.UpdateSquare(A8, NewPiece(Rook, false), noPiece)
+	bitboard.UpdateSquare(B8, NewPiece(Knight, false), noPiece)
+	bitboard.UpdateSquare(C8, NewPiece(Bishop, false), noPiece)
+	bitboard.UpdateSquare(D8, NewPiece(Queen, false), noPiece)
+	bitboard.UpdateSquare(E8, NewPiece(King, false), noPiece)
+	bitboard.UpdateSquare(F8, NewPiece(Bishop, false), noPiece)
+	bitboard.UpdateSquare(G8, NewPiece(Knight, false), noPiece)
+	bitboard.UpdateSquare(H8, NewPiece(Rook, false), noPiece)
 
 	return bitboard
 }

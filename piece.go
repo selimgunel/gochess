@@ -87,6 +87,43 @@ func (p Piece) String() string {
 	}
 }
 
+func (p Piece) Figure() string {
+	switch p.PieceType {
+	case King:
+		if p.Color {
+			return "♔"
+		}
+		return "♚"
+	case Queen:
+		if p.Color {
+			return "♕"
+		}
+		return "♛"
+	case Rook:
+		if p.Color {
+			return "♖"
+		}
+		return "♜"
+	case Bishop:
+		if p.Color {
+			return "♗"
+		}
+		return "♝"
+	case Knight:
+		if p.Color {
+			return "♘"
+		}
+		return "♞"
+	case Pawn:
+		if p.Color {
+			return "♙"
+		}
+		return "♟"
+	default:
+		return ""
+	}
+}
+
 func pieceFromName(name rune) Piece {
 	switch name {
 	case 'P':
