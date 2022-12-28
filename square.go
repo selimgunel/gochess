@@ -23,10 +23,8 @@ func NewSquare(f File, r Rank) Square {
 }
 
 func (sq Square) color() Color {
-	if ((sq / 8) % 2) == (sq % 2) {
-		return false // return black
-	}
-	return true // return white
+	return ((sq / 8) % 2) == (sq % 2)
+
 }
 
 const (

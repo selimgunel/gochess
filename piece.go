@@ -2,7 +2,6 @@ package pgn
 
 // PieceType is the type of a piece.
 type PieceType int8
-
 type Color bool
 
 const (
@@ -86,6 +85,36 @@ func (p Piece) String() string {
 	default:
 		return ""
 	}
+}
+
+func pieceFromName(name rune) Piece {
+	switch name {
+	case 'P':
+		return NewPiece(Pawn, true)
+	case 'N':
+		return NewPiece(Knight, true)
+	case 'B':
+		return NewPiece(Bishop, true)
+	case 'R':
+		return NewPiece(Rook, true)
+	case 'Q':
+		return NewPiece(Queen, true)
+	case 'K':
+		return NewPiece(King, true)
+	case 'p':
+		return NewPiece(Pawn, false)
+	case 'n':
+		return NewPiece(Knight, false)
+	case 'b':
+		return NewPiece(Bishop, false)
+	case 'r':
+		return NewPiece(Rook, false)
+	case 'q':
+		return NewPiece(Queen, false)
+	case 'k':
+		return NewPiece(King, false)
+	}
+	return NewPiece(NoPiece, true) //return a white NoPiece
 }
 
 func (c Color) String() string {
