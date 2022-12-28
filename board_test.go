@@ -3,7 +3,7 @@ package pgn
 import "testing"
 
 func TestNewBoard(t *testing.T) {
-	b := NewBoard()
+	b := StartingBoard()
 
 	t.Log(b.Draw())
 }

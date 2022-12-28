@@ -8,23 +8,20 @@ import (
 
 // A Board represents a chess board and its relationship between squares and pieces.
 type Board struct {
-	bbWhiteKing   Bitboard
-	bbWhiteQueen  Bitboard
-	bbWhiteRook   Bitboard
-	bbWhiteBishop Bitboard
-	bbWhiteKnight Bitboard
-	bbWhitePawn   Bitboard
-	bbBlackKing   Bitboard
-	bbBlackQueen  Bitboard
-	bbBlackRook   Bitboard
-	bbBlackBishop Bitboard
-	bbBlackKnight Bitboard
-	bbBlackPawn   Bitboard
-	whiteSqs      Bitboard
-	blackSqs      Bitboard
-	emptySqs      Bitboard
-	whiteKingSq   Square
-	blackKingSq   Square
+	whiteKing   Bitboard
+	whiteQueen  Bitboard
+	whiteRook   Bitboard
+	whiteBishop Bitboard
+	whiteKnight Bitboard
+	whitePawn   Bitboard
+	blackKing   Bitboard
+	blackQueen  Bitboard
+	blackRook   Bitboard
+	blackBishop Bitboard
+	blackKnight Bitboard
+	blackPawn   Bitboard
+	whitePieces Bitboard
+	blackPieces Bitboard
 }
 
 // NewBoard returns a board from a square to piece mapping.
@@ -32,76 +29,6 @@ func NewBoard() *Board {
 	b := &Board{}
 
 	return b
-}
-
-func (b *Board) setBBForPiece(p Piece, bb Bitboard) {
-	switch p.PieceType {
-	case King:
-		if p.Color {
-			b.bbWhiteKing = bb
-		} else {
-			b.bbBlackKing = bb
-		}
-	case Queen:
-		if p.Color {
-			b.bbWhiteQueen = bb
-		} else {
-			b.bbBlackQueen = bb
-		}
-	case Rook:
-		if p.Color {
-			b.bbWhiteRook = bb
-		} else {
-			b.bbBlackRook = bb
-		}
-	case Bishop:
-		if p.Color {
-			b.bbWhiteBishop = bb
-		} else {
-			b.bbBlackBishop = bb
-		}
-
-	case Knight:
-		if p.Color {
-			b.bbWhiteKnight = bb
-		} else {
-			b.bbBlackKnight = bb
-		}
-	case Pawn:
-		if p.Color {
-			b.bbWhitePawn = bb
-		} else {
-			b.bbBlackPawn = bb
-		}
-	case NoPiece:
-		fmt.Println("no piece", p)
-
-	default:
-		panic("invalid piece")
-	}
-}
-
-// TODO: understand this better
-func (b *Board) calcConvienceBBs() {
-	whiteSqs := b.bbWhiteKing | b.bbWhiteQueen | b.bbWhiteRook | b.bbWhiteBishop | b.bbWhiteKnight | b.bbWhitePawn
-	blackSqs := b.bbBlackKing | b.bbBlackQueen | b.bbBlackRook | b.bbBlackBishop | b.bbBlackKnight | b.bbBlackPawn
-	emptySqs := ^(whiteSqs | blackSqs)
-	b.whiteSqs = whiteSqs
-	b.blackSqs = blackSqs
-	b.emptySqs = emptySqs
-
-	b.whiteKingSq = NoSquare
-	b.blackKingSq = NoSquare
-
-	for sq := 0; sq < 64; sq++ {
-		sqr := Square(sq)
-		if b.bbWhiteKing.Occupied(sqr) {
-			b.whiteKingSq = sqr
-		} else if b.bbBlackKing.Occupied(sqr) {
-			b.blackKingSq = sqr
-		}
-	}
-
 }
 
 // String implements the fmt.Stringer interface and returns
@@ -145,39 +72,39 @@ func (b *Board) bbForPiece(p Piece) Bitboard {
 	switch p.PieceType {
 	case King:
 		if p.Color {
-			return b.bbWhiteKing
+			return b.whiteKing
 		} else {
-			return b.bbBlackKing
+			return b.blackKing
 		}
 	case Queen:
 		if p.Color {
-			return b.bbWhiteQueen
+			return b.whiteQueen
 		} else {
-			return b.bbBlackQueen
+			return b.blackQueen
 		}
 	case Rook:
 		if p.Color {
-			return b.bbWhiteRook
+			return b.whiteRook
 		} else {
-			return b.bbBlackRook
+			return b.blackRook
 		}
 	case Bishop:
 		if p.Color {
-			return b.bbWhiteBishop
+			return b.whiteBishop
 		} else {
-			return b.bbBlackBishop
+			return b.blackBishop
 		}
 	case Knight:
 		if p.Color {
-			return b.bbWhiteKnight
+			return b.whiteKnight
 		} else {
-			return b.bbBlackBishop
+			return b.blackKnight
 		}
 	case Pawn:
 		if p.Color {
-			return b.bbWhitePawn
+			return b.whitePawn
 		} else {
-			return b.bbBlackPawn
+			return b.blackPawn
 		}
 	}
 	return Bitboard(0)
@@ -185,19 +112,248 @@ func (b *Board) bbForPiece(p Piece) Bitboard {
 
 // Draw returns visual representation of the board useful for debugging.
 func (b *Board) Draw() string {
+	//	whiteFigures := []string{"♙", "♘", "♗", "♖", "♕", "♔"}
+	//	blackFigures := []string{"♟", "♞", "♝", "♜", "♛", "♚"}
+
 	s := "\n A B C D E F G H\n"
 	for r := 7; r >= 0; r-- {
-		s += Rank(r).String()
-		for f := 0; f < 64; f++ {
-			p := b.Piece(NewSquare(File(f), Rank(r)))
+		s += fmt.Sprint(Rank(r + 1))
+		for f := 0; f < len(Files); f++ {
+			p := b.PieceAt(SquareOf(File(f), Rank(r)))
 			if p.PieceType == NoPiece {
 				s += "-"
 			} else {
-				s += p.String()
+				s += "+"
 			}
 			s += " "
 		}
 		s += "\n"
 	}
 	return s
+}
+
+var SquareMask = initSquareMask()
+
+func initSquareMask() [64]uint64 {
+	var sqm [64]uint64
+	for sq := 0; sq < 64; sq++ {
+		var b = uint64(1 << sq)
+		sqm[sq] = b
+	}
+	return sqm
+}
+
+func (b *Board) PieceAt(sq Square) Piece {
+	if sq == NoSquare {
+		return NewPiece(NoPiece, true)
+	}
+	mask := Bitboard(SquareMask[int(sq)])
+	if b.blackPieces&mask != 0 {
+		if b.blackPawn&mask != 0 {
+			return NewPiece(Pawn, false)
+		} else if b.blackKnight&mask != 0 {
+			return NewPiece(Knight, false)
+		} else if b.blackBishop&mask != 0 {
+			return NewPiece(Bishop, false)
+		} else if b.blackRook&mask != 0 {
+			return NewPiece(Rook, false)
+		} else if b.blackQueen&mask != 0 {
+			return NewPiece(Queen, false)
+		} else if b.blackKing&mask != 0 {
+			return NewPiece(King, false)
+		}
+	}
+
+	// It is not black? then it is white
+	if b.whitePawn&mask != 0 {
+		return NewPiece(Pawn, true)
+	} else if b.whiteKnight&mask != 0 {
+		return NewPiece(King, true)
+	} else if b.whiteBishop&mask != 0 {
+		return NewPiece(Bishop, true)
+	} else if b.whiteRook&mask != 0 {
+		return NewPiece(Rook, true)
+	} else if b.whiteQueen&mask != 0 {
+		return NewPiece(Queen, true)
+	} else if b.whiteKing&mask != 0 {
+		return NewPiece(King, true)
+	}
+	return NewPiece(NoPiece, true)
+}
+
+func (b *Board) Clear(square Square, piece Piece) {
+	if piece.PieceType == NoPiece {
+		return
+	}
+	mask := Bitboard(SquareMask[int(square)])
+	switch piece.PieceType {
+	case Pawn:
+		switch piece.Color {
+		case true:
+			b.whitePawn &^= mask
+			b.whitePieces &^= mask
+		default:
+			b.blackPawn &^= mask
+			b.blackPieces &^= mask
+		}
+	case Knight:
+		switch piece.Color {
+		case true:
+			b.whiteKnight &^= mask
+			b.whitePieces &^= mask
+		default:
+			b.blackKnight &^= mask
+			b.blackPieces &^= mask
+		}
+	case Bishop:
+		switch piece.Color {
+		case true:
+			b.whiteBishop &^= mask
+			b.whitePieces &^= mask
+		default:
+			b.blackBishop &^= mask
+			b.blackPieces &^= mask
+		}
+	case Rook:
+		switch piece.Color {
+		case true:
+			b.whiteRook &^= mask
+			b.whitePieces &^= mask
+		default:
+			b.blackRook &^= mask
+			b.blackPieces &^= mask
+		}
+	case Queen:
+		switch piece.Color {
+		case true:
+			b.whiteQueen &^= mask
+			b.whitePieces &^= mask
+		default:
+			b.blackQueen &^= mask
+			b.blackPieces &^= mask
+		}
+	case King:
+		switch piece.Color {
+		case true:
+			b.whiteKing &^= mask
+			b.whitePieces &^= mask
+		default:
+			b.blackKing &^= mask
+			b.blackPieces &^= mask
+		}
+	}
+}
+func (b *Board) UpdateSquare(sq Square, newPiece Piece, oldPiece Piece) {
+	// Remove the piece from source square and add it to destination
+	b.Clear(sq, oldPiece)
+
+	mask := Bitboard(SquareMask[int(sq)])
+	switch newPiece.PieceType {
+	case Pawn:
+		switch newPiece.Color {
+		case true:
+			b.whitePawn |= mask
+			b.whitePieces |= mask
+		default:
+			b.blackPawn |= mask
+			b.blackPieces |= mask
+		}
+	case Knight:
+		switch newPiece.Color {
+		case true:
+			b.whiteKnight |= mask
+			b.whitePieces |= mask
+		default:
+			b.blackKnight |= mask
+			b.blackPieces |= mask
+		}
+	case Bishop:
+		switch newPiece.Color {
+		case true:
+			b.whiteBishop |= mask
+			b.whitePieces |= mask
+		default:
+			b.blackBishop |= mask
+			b.blackPieces |= mask
+		}
+	case Rook:
+		switch newPiece.Color {
+		case true:
+			b.whiteRook |= mask
+			b.whitePieces |= mask
+		default:
+			b.blackRook |= mask
+			b.blackPieces |= mask
+		}
+	case Queen:
+		switch newPiece.Color {
+		case true:
+			b.whiteQueen |= mask
+			b.whitePieces |= mask
+		default:
+			b.blackQueen |= mask
+			b.blackPieces |= mask
+		}
+	case King:
+		switch newPiece.Color {
+		case true:
+			b.whiteKing |= mask
+			b.whitePieces |= mask
+		default:
+			b.blackKing |= mask
+			b.blackPieces |= mask
+		}
+	}
+}
+
+func StartingBoard() Board {
+	bitboard := Board{}
+	noPiece := NewPiece(NoPiece, true)
+
+	bitboard.UpdateSquare(A2, NewPiece(Pawn, true), noPiece)
+	bitboard.UpdateSquare(B2, NewPiece(Pawn, true), noPiece)
+	bitboard.UpdateSquare(C2, NewPiece(Pawn, true), noPiece)
+	bitboard.UpdateSquare(D2, NewPiece(Pawn, true), noPiece)
+	bitboard.UpdateSquare(E2, NewPiece(Pawn, true), noPiece)
+	bitboard.UpdateSquare(F2, NewPiece(Pawn, true), noPiece)
+	bitboard.UpdateSquare(G2, NewPiece(Pawn, true), noPiece)
+	bitboard.UpdateSquare(H2, NewPiece(Pawn, true), noPiece)
+
+	bitboard.UpdateSquare(A7, NewPiece(Pawn, false), noPiece)
+	bitboard.UpdateSquare(B7, NewPiece(Pawn, false), noPiece)
+	bitboard.UpdateSquare(C7, NewPiece(Pawn, false), noPiece)
+	bitboard.UpdateSquare(D7, NewPiece(Pawn, false), noPiece)
+	bitboard.UpdateSquare(E7, NewPiece(Pawn, false), noPiece)
+	bitboard.UpdateSquare(F7, NewPiece(Pawn, false), noPiece)
+	bitboard.UpdateSquare(G7, NewPiece(Pawn, false), noPiece)
+	bitboard.UpdateSquare(H7, NewPiece(Pawn, false), noPiece)
+
+	// bitboard.UpdateSquare(A7, BlackPawn, NoPiece)
+	// bitboard.UpdateSquare(B7, BlackPawn, NoPiece)
+	// bitboard.UpdateSquare(C7, BlackPawn, NoPiece)
+	// bitboard.UpdateSquare(D7, BlackPawn, NoPiece)
+	// bitboard.UpdateSquare(E7, BlackPawn, NoPiece)
+	// bitboard.UpdateSquare(F7, BlackPawn, NoPiece)
+	// bitboard.UpdateSquare(G7, BlackPawn, NoPiece)
+	// bitboard.UpdateSquare(H7, BlackPawn, NoPiece)
+
+	// bitboard.UpdateSquare(A1, WhiteRook, NoPiece)
+	// bitboard.UpdateSquare(B1, WhiteKnight, NoPiece)
+	// bitboard.UpdateSquare(C1, WhiteBishop, NoPiece)
+	// bitboard.UpdateSquare(D1, WhiteQueen, NoPiece)
+	// bitboard.UpdateSquare(E1, WhiteKing, NoPiece)
+	// bitboard.UpdateSquare(F1, WhiteBishop, NoPiece)
+	// bitboard.UpdateSquare(G1, WhiteKnight, NoPiece)
+	// bitboard.UpdateSquare(H1, WhiteRook, NoPiece)
+
+	// bitboard.UpdateSquare(A8, BlackRook, NoPiece)
+	// bitboard.UpdateSquare(B8, BlackKnight, NoPiece)
+	// bitboard.UpdateSquare(C8, BlackBishop, NoPiece)
+	// bitboard.UpdateSquare(D8, BlackQueen, NoPiece)
+	// bitboard.UpdateSquare(E8, BlackKing, NoPiece)
+	// bitboard.UpdateSquare(F8, BlackBishop, NoPiece)
+	// bitboard.UpdateSquare(G8, BlackKnight, NoPiece)
+	// bitboard.UpdateSquare(H8, BlackRook, NoPiece)
+
+	return bitboard
 }

@@ -11,22 +11,6 @@ const sixtyFour = 64
 
 type Bitboard uint64
 
-func newBitboard(m map[Square]bool) Bitboard {
-	s := ""
-	for sq := 0; sq < sixtyFour; sq++ {
-		if m[Square(sq)] {
-			s += "1"
-		} else {
-			s += "0"
-		}
-	}
-	bb, err := strconv.ParseUint(s, 2, 64)
-	if err != nil {
-		panic(err)
-	}
-	return Bitboard(bb)
-}
-
 func (bb Bitboard) String() string {
 	s := strconv.FormatUint(uint64(bb), 2)
 	var b strings.Builder

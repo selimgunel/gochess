@@ -22,11 +22,6 @@ func NewSquare(f File, r Rank) Square {
 	return Square(int8(r)*eight + int8(f))
 }
 
-func (sq Square) color() Color {
-	return ((sq / 8) % 2) == (sq % 2)
-
-}
-
 const (
 	NoSquare Square = iota - 1
 	A1
@@ -136,6 +131,9 @@ func (f File) String() string {
 	return fileChars[f : f+1]
 }
 
+var Ranks = []Rank{Rank1, Rank2, Rank3, Rank4, Rank5, Rank6, Rank7, Rank8}
+var Files = []File{FileA, FileB, FileC, FileD, FileE, FileF, FileG, FileH}
+
 var (
 	strToSquareMap = map[string]Square{
 		"a1": A1, "a2": A2, "a3": A3, "a4": A4, "a5": A5, "a6": A6, "a7": A7, "a8": A8,
@@ -148,3 +146,7 @@ var (
 		"h1": H1, "h2": H2, "h3": H3, "h4": H4, "h5": H5, "h6": H6, "h7": H7, "h8": H8,
 	}
 )
+
+func SquareOf(file File, rank Rank) Square {
+	return Square((int(rank) * 8) + int(file))
+}
