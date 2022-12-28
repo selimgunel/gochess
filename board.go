@@ -2,8 +2,6 @@ package gochess
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 )
 
 // A Board represents a chess board and its relationship between squares and pieces.
@@ -31,96 +29,18 @@ func NewBoard() *Board {
 	return b
 }
 
-// String implements the fmt.Stringer interface and returns
-// a string in the FEN board format: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
-func (b *Board) String() string {
-	fen := ""
-	for r := 7; r >= 0; r-- {
-		for f := 0; f < 64; f++ {
-			sq := NewSquare(File(f), Rank(r))
-			p := b.Piece(sq)
-			if p.PieceType != NoPiece {
-				fen += p.String()
-			} else {
-				fen += "1"
-			}
-		}
-		if r != 0 {
-			fen += "/"
-		}
-	}
-	for i := 8; i > 1; i-- {
-		repeatStr := strings.Repeat("1", i)
-		countStr := strconv.Itoa(i)
-		fen = strings.Replace(fen, repeatStr, countStr, -1)
-	}
-	return fen
-}
-
-// Piece returns the piece for the given square.
-func (b *Board) Piece(sq Square) Piece {
-	for _, p := range AllPieces() {
-		bb := b.bbForPiece(p)
-		if bb.Occupied(sq) {
-			return p
-		}
-	}
-	return NewPiece(NoPiece, true)
-}
-
-func (b *Board) bbForPiece(p Piece) Bitboard {
-	switch p.PieceType {
-	case King:
-		if p.Color {
-			return b.whiteKing
-		} else {
-			return b.blackKing
-		}
-	case Queen:
-		if p.Color {
-			return b.whiteQueen
-		} else {
-			return b.blackQueen
-		}
-	case Rook:
-		if p.Color {
-			return b.whiteRook
-		} else {
-			return b.blackRook
-		}
-	case Bishop:
-		if p.Color {
-			return b.whiteBishop
-		} else {
-			return b.blackBishop
-		}
-	case Knight:
-		if p.Color {
-			return b.whiteKnight
-		} else {
-			return b.blackKnight
-		}
-	case Pawn:
-		if p.Color {
-			return b.whitePawn
-		} else {
-			return b.blackPawn
-		}
-	}
-	return Bitboard(0)
-}
-
 // Draw returns visual representation of the board useful for debugging.
 func (b *Board) Draw() string {
 
 	s := "\n A B C D E F G H\n"
 	for r := 7; r >= 0; r-- {
-		s += fmt.Sprint(Rank(r))
-		for f := 0; f < len(Files)-1; f++ {
+		s += fmt.Sprint(Rank(r + 1))
+		for f := 0; f < len(Files); f++ {
 			p := b.PieceAt(SquareOf(File(f), Rank(r)))
 			if p.PieceType == NoPiece {
 				s += "-"
 			} else {
+				fmt.Printf("%s %s %s %s %d %d\n", p.Figure(), p.String(), p.Color, p.PieceType, File(f), Rank(r))
 				s += p.Figure()
 			}
 			s += " "
