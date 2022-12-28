@@ -1,4 +1,4 @@
-package pgn
+package gochess
 
 // PieceType is the type of a piece.
 type PieceType int8

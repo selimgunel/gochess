@@ -1,10 +1,10 @@
 `pgn` is a PGN file parser written in `go`. 
-There is just one useful method, namely `pgn.Parse()`. 
+There is just one useful method, namely `gochessParse()`. 
 ```go
 package main
 
 import (
-	parser "github.com/narslan/pgn"
+	parser "github.com/narslan/gochess"
 	
 )
 

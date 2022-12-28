@@ -1,4 +1,4 @@
-package pgn
+package gochess
 
 type Move struct {
 }
